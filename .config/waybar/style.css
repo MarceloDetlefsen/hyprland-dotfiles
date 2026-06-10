@@ -1,0 +1,104 @@
+* {
+    font-family: JetBrainsMono Nerd Font;
+    font-size: 12px;
+}
+
+window#waybar {
+    background: rgba(15, 15, 15, 0.7);
+    border-radius: 14px;
+    margin: 6px;
+    color: #ffffff;
+}
+
+/* Workspaces */
+#workspaces button {
+    padding: 0 8px;
+    margin: 4px;
+    border-radius: 10px;
+    background: transparent;
+    color: #777;
+}
+
+#workspaces button.active {
+    background: #89b4fa;
+    color: #000;
+}
+
+#workspaces {
+    margin-right: 10px;
+}
+
+#workspaces button:hover {
+    background: #45475a;
+}
+
+/* Modules */
+#clock, #pulseaudio, #network, #tray {
+    padding: 0 10px;
+    margin: 4px;
+    border-radius: 10px;
+    background: rgba(40, 40, 40, 0.8);
+}
+
+#custom-brightness {
+    padding: 0 10px;
+    margin: 4px;
+    border-radius: 10px;
+    background: rgba(40, 40, 40, 0.8);
+}
+
+#custom-cava {
+    font-family: JetBrainsMono Nerd Font;
+    font-size: 12px;
+    color: #89b4fa;
+    padding: 0 12px;
+}
+
+#battery {
+    padding: 0 10px;
+    margin: 4px;
+    border-radius: 10px;
+    background: rgba(40, 40, 40, 0.8);
+    color: #cdd6f4;
+}
+
+/* 
+#hyprland-workspaces,
+#hyprland-window {
+    margin: 0 6px;
+}
+*/
+
+/* Estados */
+#battery.charging {
+    color: #a6e3a1;
+}
+
+#battery.warning {
+    color: #f9e2af;
+}
+
+#battery.critical {
+    color: #f38ba8;
+}
+
+#custom-battery {
+    padding: 0 10px;
+    margin: 4px;
+    border-radius: 10px;
+    background: rgba(40, 40, 40, 0.8);
+    color: #cdd6f4;
+}
+
+/* Perfiles */
+#custom-battery.performance {
+    color: #f38ba8; /* rojo */
+}
+
+#custom-battery.balanced {
+    color: #cdd6f4; /* normal */
+}
+
+#custom-battery.powersave {
+    color: #a6e3a1; /* verde */
+}

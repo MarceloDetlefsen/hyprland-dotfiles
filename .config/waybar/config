@@ -1,0 +1,78 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 32,
+
+  "modules-left": ["hyprland/workspaces", "hyprland/window"],
+  "modules-center": ["custom/cava", "custom/playerinfo", "clock"],
+  "modules-right": ["custom/brightness", "pulseaudio", "network", "custom/battery"],
+
+  "hyprland/workspaces": {
+    "disable-scroll": true,
+    "format": "{icon}",
+    "persistent-workspaces": {
+      "*": 5
+    }
+  },
+
+"clock": {
+  "format": "  {:%H:%M}",
+  "tooltip": true,
+  "tooltip-format": "{:%A, %d %B %Y}\n{calendar}"
+},
+
+  "pulseaudio": {
+    "format": "  {volume}%",
+    "format-muted": "  muted",
+    "on-click": "pavucontrol"
+  },
+
+  "custom/brightness": {
+    "exec": "brightnessctl -m | cut -d, -f4",
+    "interval": 2,
+    "format": "☀️  {}",
+    "on-click": "brightnessctl set +10%",
+    "on-click-right": "brightnessctl set 10%-",
+    "tooltip": true
+  },
+
+  "custom/cava": {
+    "format": "{}",
+    "exec": "~/.config/waybar/scripts/cava.sh",
+    "restart-interval": 1
+  },
+
+  "custom/playerinfo": {
+    "format": "[ {} ]",
+    "exec": "~/.config/waybar/playerinfo.sh",
+    "escape": true,
+    "interval": 1,
+    "tooltip": true,
+    "on-click-middle": "playerctl play-pause",
+    "on-click-right": "playerctl next",
+    "on-click-left": "playerctl previous"
+  },
+
+  "network": {
+    "format-wifi": "  {signalStrength}%",
+    "format-ethernet": "󰈀  wired",
+    "format-disconnected": "󰤮  offline",
+    "tooltip": true,
+    "on-click": "networkmanager_dmenu"
+  },
+
+"custom/battery": {
+  "exec": "/home/chelo/.config/waybar/scripts/battery-profile.sh",
+  "interval": 10,
+  "signal": 8,
+  "on-click": "/home/chelo/.config/waybar/scripts/power-menu.sh"
+},
+
+"hyprland/window": {
+  "format": "  {class} - {title}",
+  "max-length": 80,
+  "separate-outputs": true,
+  "tooltip": true
+},
+
+}
