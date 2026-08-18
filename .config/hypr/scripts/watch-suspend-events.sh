@@ -9,6 +9,6 @@ flock -n 9 || exit 0
 dbus-monitor --system "type='signal',interface='org.freedesktop.login1.Manager',member='PrepareForSleep'" |
 while read -r line; do
   if [[ "$line" == *"boolean true"* ]]; then
-    /home/chelo/.config/hypr/scripts/lock-session.sh
+    "$script_dir/lock-session.sh"
   fi
 done

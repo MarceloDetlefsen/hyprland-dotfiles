@@ -2,6 +2,19 @@
 
 MENU_CMD="wofi --dmenu --prompt 'Modo HDMI' --width 360 --height 220"
 
+get_monitors() {
+  hyprctl monitors 2>/dev/null | awk '/^Monitor / {gsub(":", "", $2); print $2}'
+}
+
+internal_monitor="$(get_monitors | awk '/^(eDP|LVDS|DSI)/ {print; exit}')"
+external_monitor="$(get_monitors | awk '!/^(eDP|LVDS|DSI)/ {print; exit}')"
+
+if [ -z "$internal_monitor" ] || [ -z "$external_monitor" ]; then
+  set -- $(get_monitors)
+  [ -z "$internal_monitor" ] && internal_monitor="${1:-}"
+  [ -z "$external_monitor" ] && external_monitor="${2:-}"
+fi
+
 CHOICE=$(printf '%s\n' \
   'Espejo (100%)' \
   'Extendido (derecha)' \
@@ -12,23 +25,23 @@ CHOICE=$(printf '%s\n' \
 
 case "$CHOICE" in
   'Espejo (100%)')
-    hyprctl keyword monitor "eDP-1,1920x1080@60,0x0,1"
-    hyprctl keyword monitor "HDMI-A-1,1920x1080@60,0x0,1,mirror,eDP-1"
+    [ -n "$internal_monitor" ] && hyprctl keyword monitor "$internal_monitor,preferred,auto,1"
+    [ -n "$external_monitor" ] && hyprctl keyword monitor "$external_monitor,preferred,auto,1,mirror,${internal_monitor:-$external_monitor}"
     notify-send "Hyprland" "Modo HDMI: espejo (100%)"
     ;;
   'Extendido (derecha)')
-    hyprctl keyword monitor "eDP-1,preferred,auto,1"
-    hyprctl keyword monitor "HDMI-A-1,1920x1080@60,1920x0,1"
+    [ -n "$internal_monitor" ] && hyprctl keyword monitor "$internal_monitor,preferred,auto,1"
+    [ -n "$external_monitor" ] && hyprctl keyword monitor "$external_monitor,preferred,auto,1"
     notify-send "Hyprland" "Modo HDMI: extendido"
     ;;
   'Solo HDMI')
-    hyprctl keyword monitor "eDP-1,disable"
-    hyprctl keyword monitor "HDMI-A-1,1920x1080@60,0x0,1"
+    [ -n "$internal_monitor" ] && hyprctl keyword monitor "$internal_monitor,disable"
+    [ -n "$external_monitor" ] && hyprctl keyword monitor "$external_monitor,preferred,auto,1"
     notify-send "Hyprland" "Modo HDMI: solo externo"
     ;;
   'Solo Laptop')
-    hyprctl keyword monitor "HDMI-A-1,disable"
-    hyprctl keyword monitor "eDP-1,preferred,auto,1"
+    [ -n "$external_monitor" ] && hyprctl keyword monitor "$external_monitor,disable"
+    [ -n "$internal_monitor" ] && hyprctl keyword monitor "$internal_monitor,preferred,auto,1"
     notify-send "Hyprland" "Modo HDMI: solo laptop"
     ;;
 esac

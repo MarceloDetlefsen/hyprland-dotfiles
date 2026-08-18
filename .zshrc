@@ -20,9 +20,12 @@ fi
 # Cargo binaries
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# Local Powerlevel10k overrides
+[[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
+
 # Mostrar una foto al abrir la terminal
 # if [[ $- == *i* ]]; then
-#   kitten icat /home/chelo/Imágenes/Cloud.png
+#   kitten icat "$HOME/Imágenes/Cloud.png"
 # fi
 
 # Mostrar info del sistema (solo en shells interactivos)

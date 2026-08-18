@@ -58,14 +58,14 @@
     "format-ethernet": "󰈀  wired",
     "format-disconnected": "󰤮  offline",
     "tooltip": true,
-    "on-click": "networkmanager_dmenu"
+    "on-click": "~/.config/waybar/scripts/network-menu.sh"
   },
 
 "custom/battery": {
-  "exec": "/home/chelo/.config/waybar/scripts/battery-profile.sh",
+  "exec": "~/.config/waybar/scripts/battery-profile.sh",
   "interval": 10,
   "signal": 8,
-  "on-click": "/home/chelo/.config/waybar/scripts/power-menu.sh"
+  "on-click": "~/.config/waybar/scripts/power-menu.sh"
 },
 
 "hyprland/window": {
