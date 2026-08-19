@@ -1,104 +1,70 @@
+@define-color bg    #17272f;
+@define-color bg1   
+#3c444a;
+@define-color fg    
+#d5c9b2;
+@define-color blue  
+#7aa2f7;
 * {
-    font-family: JetBrainsMono Nerd Font;
-    font-size: 12px;
+  border: none;
+  border-radius: 0;
+  font-family: "Terminus", "JetBrainsMono Nerd Font";
+  font-size: 13px;
+  font-weight: 800;
 }
-
 window#waybar {
-    background: rgba(15, 15, 15, 0.7);
-    border-radius: 14px;
-    margin: 6px;
-    color: #ffffff;
+  background-color: @bg;
+  border-top: 3px solid #5d666d;
+  color: @fg;
 }
-
-/* Workspaces */
-#workspaces button {
-    padding: 0 8px;
-    margin: 4px;
-    border-radius: 10px;
-    background: transparent;
-    color: #777;
+#cpu,
+#memory,
+#pulseaudio,
+#custom-brightness,
+#custom-network,
+#custom-launcher,
+#workspaces button,
+#custom-updates,
+#battery,
+#clock,
+#custom-power,
+#tray {
+  background: @bg;
+  color: @fg;
+  border-top: 2px solid #5d666d;
+  border-left: 2px solid #5d666d;
+  border-right: 2px solid #1a1e21;
+  border-bottom: 2px solid #1a1e21;
+  margin: 4px 2px;
+  padding: 0 10px;
 }
-
+#cpu,
+#memory {
+  color: @blue;
+  background: #252c31;
+  border-top: 2px solid #1a1e21;
+  border-left: 2px solid #1a1e21;
+  border-right: 2px solid #5d666d;
+  border-bottom: 2px solid #5d666d;
+}
 #workspaces button.active {
-    background: #89b4fa;
-    color: #000;
+  color: @fg;
+  background: @bg1;
+  border-top: 2px solid #1a1e21;
+  border-left: 2px solid #1a1e21;
+  border-right: 2px solid #5d666d;
+  border-bottom: 2px solid #5d666d;
 }
-
-#workspaces {
-    margin-right: 10px;
+/* So that dynamic icons don't squash together */
+#workspaces button label {
+  font-size: 16px;
+  padding: 0 4px;
 }
-
-#workspaces button:hover {
-    background: #45475a;
+#workspaces button label {
+  font-size: 17px;
+  letter-spacing: 10px; /* keep it subtle */
+  padding: 0 6px;
 }
-
-/* Modules */
-#clock, #pulseaudio, #network, #tray {
-    padding: 0 10px;
-    margin: 4px;
-    border-radius: 10px;
-    background: rgba(40, 40, 40, 0.8);
-}
-
-#custom-brightness {
-    padding: 0 10px;
-    margin: 4px;
-    border-radius: 10px;
-    background: rgba(40, 40, 40, 0.8);
-}
-
-#custom-cava {
-    font-family: JetBrainsMono Nerd Font;
-    font-size: 12px;
-    color: #89b4fa;
-    padding: 0 12px;
-}
-
-#battery {
-    padding: 0 10px;
-    margin: 4px;
-    border-radius: 10px;
-    background: rgba(40, 40, 40, 0.8);
-    color: #cdd6f4;
-}
-
-/* 
-#hyprland-workspaces,
-#hyprland-window {
-    margin: 0 6px;
-}
-*/
-
-/* Estados */
-#battery.charging {
-    color: #a6e3a1;
-}
-
-#battery.warning {
-    color: #f9e2af;
-}
-
-#battery.critical {
-    color: #f38ba8;
-}
-
-#custom-battery {
-    padding: 0 10px;
-    margin: 4px;
-    border-radius: 10px;
-    background: rgba(40, 40, 40, 0.8);
-    color: #cdd6f4;
-}
-
-/* Perfiles */
-#custom-battery.performance {
-    color: #f38ba8; /* rojo */
-}
-
-#custom-battery.balanced {
-    color: #cdd6f4; /* normal */
-}
-
-#custom-battery.powersave {
-    color: #a6e3a1; /* verde */
+#custom-launcher {
+  color: #20c93d;
 }

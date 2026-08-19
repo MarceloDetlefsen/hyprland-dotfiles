@@ -1,2 +1,6 @@
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
-export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/tmp}/ssh-agent.socket"
+# SSH agent
+if ! pgrep -u "$USER" ssh-agent >/dev/null; then
+    eval "$(ssh-agent -s)"
+fi
+
+ssh-add ~/.ssh/GitHub >/dev/null 2>&1

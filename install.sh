@@ -58,6 +58,7 @@ install_pacman_packages() {
     hyprpaper
     waybar
     wofi
+    rofi
     kitty
     mako
     swayidle
@@ -75,10 +76,12 @@ install_pacman_packages() {
     xdg-desktop-portal-hyprland
     polkit-gnome
     kvantum
+    qt5ct
     qt6ct
     gtk3
     gtk4
     numlockx
+    quickshell
     cava
     acpi
     upower
@@ -132,11 +135,17 @@ done
 link_path ".config/hypr" ".config/hypr"
 link_path ".config/waybar" ".config/waybar"
 link_path ".config/wofi" ".config/wofi"
+link_path ".config/rofi" ".config/rofi"
+link_path ".config/quickshell" ".config/quickshell"
 link_path ".config/kitty" ".config/kitty"
 link_path ".config/gtk-3.0" ".config/gtk-3.0"
 link_path ".config/gtk-4.0" ".config/gtk-4.0"
 link_path ".config/Kvantum" ".config/Kvantum"
+link_path ".config/qt5ct" ".config/qt5ct"
 link_path ".config/qt6ct" ".config/qt6ct"
+link_path ".config/cava" ".config/cava"
+link_path ".config/mako" ".config/mako"
+link_path ".config/nwg-drawer" ".config/nwg-drawer"
 link_path ".zen/installs.ini" ".zen/installs.ini"
 link_path ".zen/profiles.ini" ".zen/profiles.ini"
 link_path ".zshrc" ".zshrc"
@@ -146,6 +155,9 @@ link_path "wallpapers" "wallpapers"
 
 run chmod +x "$HOME/.config/hypr/scripts/"*.sh
 run chmod +x "$HOME/.config/waybar/scripts/"*.sh
+run chmod +x "$HOME/.config/quickshell/bin/"*.sh
+run chmod +x "$HOME/.config/rofi"/*.sh
+run chmod +x "$HOME/.config/rofi/crt/"*.sh
 
 log "Instalación completa."
 log "Recargá Hyprland con: hyprctl reload"

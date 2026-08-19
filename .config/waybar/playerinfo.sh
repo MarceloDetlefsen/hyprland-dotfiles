@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Muestra info del reproductor activo (Spotify, YouTube, etc.)
-status=$(playerctl status 2>/dev/null || true)
+status=$(playerctl status 2>/dev/null)
 
 if [ "$status" = "Playing" ] || [ "$status" = "Paused" ]; then
     artist=$(playerctl metadata artist 2>/dev/null)

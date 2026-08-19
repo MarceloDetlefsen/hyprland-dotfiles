@@ -43,6 +43,10 @@ rewrite_home_paths() {
   local file
 
   while IFS= read -r -d '' file; do
+    if ! grep -Iq . "$file"; then
+      continue
+    fi
+
     case "$file" in
       *.png|*.jpg|*.jpeg|*.svg|*.ico|*.gif|*.webp)
         continue
@@ -63,6 +67,22 @@ rewrite_home_paths() {
       \) -prune -o \
       -type f -print0
   )
+
+  while IFS= read -r -d '' file; do
+    if ! grep -Iq . "$file"; then
+      continue
+    fi
+
+    if [ "$DRY_RUN" = "1" ]; then
+      printf '[dry-run] normalize portable paths %s\n' "$file"
+      continue
+    fi
+
+    perl -0pi -e 's#~\/\.local\/share\/surface-dots-second\/home\/Pictures\/Wallpapers#~/wallpapers#g; s#~\/\.local\/share\/surface-dots-second\/home\/\.config\/rofi\/profile\.jpg#~/.config/rofi/profile.jpg#g; s#~\/\.local\/share\/surface-dots-second\/home\/\.config\/rofi\/icons\/light#~/.config/rofi/icons/light#g; s#~\/Imágenes\/Personal\/Cloud\.png#~/.config/quickshell/profile.jpg#g' "$file"
+  done < <(
+    find "$REPO_ROOT/.config/quickshell" "$REPO_ROOT/.config/rofi" \
+      -type f -print0
+  )
 }
 
 log "Sincronizando configs desde: $SOURCE_HOME"
@@ -75,7 +95,17 @@ copy_tree "$SOURCE_HOME/.config/gtk-3.0" "$REPO_ROOT/.config/gtk-3.0"
 copy_tree "$SOURCE_HOME/.config/gtk-4.0" "$REPO_ROOT/.config/gtk-4.0"
 copy_tree "$SOURCE_HOME/.config/Kvantum" "$REPO_ROOT/.config/Kvantum"
 copy_tree "$SOURCE_HOME/.config/qt6ct" "$REPO_ROOT/.config/qt6ct"
-copy_tree "$SOURCE_HOME/.zen" "$REPO_ROOT/.zen"
+copy_tree "$SOURCE_HOME/.config/qt5ct" "$REPO_ROOT/.config/qt5ct"
+if [ -d "$SOURCE_HOME/.config/quickshell" ]; then
+  run mkdir -p "$REPO_ROOT/.config/quickshell"
+  run rsync -a --exclude '.cache/' "$SOURCE_HOME/.config/quickshell/" "$REPO_ROOT/.config/quickshell/"
+fi
+copy_tree "$SOURCE_HOME/.config/rofi" "$REPO_ROOT/.config/rofi"
+copy_tree "$SOURCE_HOME/.config/cava" "$REPO_ROOT/.config/cava"
+copy_tree "$SOURCE_HOME/.config/mako" "$REPO_ROOT/.config/mako"
+copy_tree "$SOURCE_HOME/.config/nwg-drawer" "$REPO_ROOT/.config/nwg-drawer"
+copy_file "$SOURCE_HOME/.zen/installs.ini" "$REPO_ROOT/.zen/installs.ini"
+copy_file "$SOURCE_HOME/.zen/profiles.ini" "$REPO_ROOT/.zen/profiles.ini"
 copy_tree "$SOURCE_HOME/wallpapers" "$REPO_ROOT/wallpapers"
 
 copy_file "$SOURCE_HOME/.zshrc" "$REPO_ROOT/.zshrc"

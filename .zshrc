@@ -20,12 +20,9 @@ fi
 # Cargo binaries
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# Local Powerlevel10k overrides
-[[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
-
 # Mostrar una foto al abrir la terminal
 # if [[ $- == *i* ]]; then
-#   kitten icat "$HOME/Imágenes/Cloud.png"
+#   kitten icat ~/Imágenes/Cloud.png
 # fi
 
 # Mostrar info del sistema (solo en shells interactivos)
@@ -42,4 +39,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
 # Shortcut para el server de Bodega de Licores
-alias server-bodega="ssh -i ~/.ssh/AWS root@34.174.123.107"
+# alias server-bodega="ssh -i ~/.ssh/AWS root@34.174.123.107"
+alias server-bodega="ssh -i ~/.ssh/AWS root@34.174.62.78"
+
+alias server-bodega-nuevo="ssh -i ~/.ssh/AWS root@34.57.191.195"
