@@ -104,7 +104,7 @@ PanelWindow {
     property int panelW: win.contentMode === "wallpaper" ? 540
         : win.contentMode === "settings" ? 620
         : win.contentMode === "monitors" ? 560
-        : win.topAnchored ? 320 : 520
+        : 520
 // ---------------------------------------------------------------------------------------------------------------------------
         Item {
             id: root
@@ -400,14 +400,11 @@ PanelWindow {
                                 : cardsColumn.implicitHeight
                     Behavior on implicitHeight { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
-                    // Task style keeps its own two-column card set; top style uses
-                    // the original top-bar cards under hub/top, which are a different
-                    // design rather than a reflow of these.
                     Loader {
                         id: cardsColumn
                         width: parent.width
                         active: Lib.Configuration.ready
-                        sourceComponent: win.topAnchored ? topCards : taskCards
+                        sourceComponent: taskCards
                         opacity: win.contentMode === "cards" ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
                         // Stay rendered instead of visible:false

@@ -55,11 +55,12 @@ ShellRoot {
                 }
             }
 
-            // The top bar keeps rofi as its launcher, so the dock drawers stay unused
+            // The top bar now reuses the same launcher flow as the taskbar
             Component {
                 id: topBarComponent
                 Bars.TopBar {
                     screen: v.modelData
+                    onLauncherClicked: wideDrawer.toggle()
                     onRequestHubToggle: v.toggleHub()
                 }
             }

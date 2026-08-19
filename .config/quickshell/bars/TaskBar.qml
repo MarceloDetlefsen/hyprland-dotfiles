@@ -12,11 +12,28 @@ import "../lib" as Lib
 
 PanelWindow {
     id: taskbar
-    anchors { bottom: true; left: true; right: true }
+    property bool topMode: false
+    anchors {
+        left: true
+        right: true
+        top: topMode
+        bottom: !topMode
+    }
     height: 50
-    margins { bottom: -14 }
+    margins {
+        top: topMode ? -14 : 0
+        bottom: topMode ? 0 : -14
+    }
     color: "transparent"    
     WlrLayershell.exclusiveZone: Lib.Configuration.taskbarExclusiveZone
+
+    Rectangle {
+        anchors.fill: parent
+        visible: taskbar.topMode
+        color: taskbar.isDarkMode
+            ? Qt.rgba(0.07, 0.08, 0.09, 0.96)
+            : Qt.rgba(0.58, 0.59, 0.54, 0.54)
+    }
 
 
     // -----------------------------------------------
@@ -411,7 +428,9 @@ PanelWindow {
     Item {
         id: container
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
+        anchors.top: taskbar.topMode ? parent.top : undefined
+        anchors.bottom: taskbar.topMode ? undefined : parent.bottom
+        anchors.topMargin: taskbar.topMode ? 0 : 10
         anchors.bottomMargin: 10
         
         width: taskbar.isDockMode ? (parent.width - 20) : (parent.width - 20)
@@ -433,9 +452,12 @@ PanelWindow {
             Rectangle {
                 id: pill
                 anchors.fill: parent
-                anchors.bottomMargin: -12
+                anchors.topMargin: taskbar.topMode ? -12 : 0
+                anchors.bottomMargin: taskbar.topMode ? 0 : -12
                 radius: 9
-                color: taskbar.isDarkMode ? '#00ff0000' : '#00949689'
+                color: taskbar.isDarkMode
+                    ? Qt.rgba(0.07, 0.08, 0.09, taskbar.topMode ? 0.96 : 0.86)
+                    : Qt.rgba(0.58, 0.59, 0.54, 0.54)
             }
             
             MouseArea {
@@ -448,13 +470,13 @@ PanelWindow {
             // ----------------------------------------------- 
             // DOCK MODE LAYOUT
             // ----------------------------------------------- 
-            RowLayout {
-                id: dockContent
-                visible: taskbar.isDockMode
-                opacity: taskbar.isDockMode ? 1.0 : 0.0
-                anchors.centerIn: parent
-                anchors.verticalCenterOffset: 4
-                spacing: -5
+                RowLayout {
+                    id: dockContent
+                    visible: taskbar.isDockMode
+                    opacity: taskbar.isDockMode ? 1.0 : 0.0
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: taskbar.topMode ? -4 : 4
+                    spacing: -5
                 
                 Behavior on opacity {
                     NumberAnimation { duration: 300; easing.type: Easing.OutQuart }
@@ -583,7 +605,7 @@ PanelWindow {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.rightMargin: 0
-                anchors.verticalCenterOffset: 5
+                anchors.verticalCenterOffset: taskbar.topMode ? -5 : 5
                 width: dockBatteryArea.width
                 height: 32
                 
@@ -646,16 +668,16 @@ PanelWindow {
             // WORKSPACE MODE LAYOUT                        
             // --------------------------------------------
 
-            RowLayout {
-                id: workspaceContent
-                visible: !taskbar.isDockMode
-                opacity: !taskbar.isDockMode ? 1.0 : 0.0
-                anchors.fill: parent
-                anchors.margins: 10
-                anchors.leftMargin: 0   
-                anchors.rightMargin: 0    
-                anchors.topMargin: 14 
-                spacing: 10
+                RowLayout {
+                    id: workspaceContent
+                    visible: !taskbar.isDockMode
+                    opacity: !taskbar.isDockMode ? 1.0 : 0.0
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    anchors.leftMargin: 0
+                    anchors.rightMargin: 0
+                    anchors.topMargin: 14
+                    spacing: 10
                 
                 Behavior on opacity {
                     NumberAnimation { duration: 300; easing.type: Easing.OutQuart }
