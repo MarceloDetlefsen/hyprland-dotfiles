@@ -52,13 +52,13 @@ PanelWindow {
         if (v !== "on" && v !== "off") return
 
         if (v === "on") {
-            root.active = false
-            root.sublabel = "Disabled"
-            root.accentColor = root.theme.accentRed
-        } else {
             root.active = true
             root.sublabel = "Enabled"
             root.accentColor = root.theme.accentSlider
+        } else {
+            root.active = false
+            root.sublabel = "Disabled"
+            root.accentColor = root.theme.accentRed
         }
         iconPop.restart()
         _show()
