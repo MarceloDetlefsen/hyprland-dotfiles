@@ -38,17 +38,6 @@ window#waybar {
   margin: 4px 2px;
   padding: 0 10px;
 }
-#workspaces {
-  margin: 4px 4px;
-}
-#workspaces button {
-  padding: 0 8px;
-  margin: 4px 2px;
-  border-top: 2px solid #5d666d;
-  border-left: 2px solid #5d666d;
-  border-right: 2px solid #1a1e21;
-  border-bottom: 2px solid #1a1e21;
-}
 #cpu,
 #memory {
   color: @blue;
@@ -68,9 +57,13 @@ window#waybar {
 }
 /* So that dynamic icons don't squash together */
 #workspaces button label {
-  font-size: 13px;
-  letter-spacing: 0;
-  padding: 0 3px;
+  font-size: 16px;
+  padding: 0 4px;
+}
+#workspaces button label {
+  font-size: 17px;
+  letter-spacing: 10px; /* keep it subtle */
+  padding: 0 6px;
 }
 #custom-launcher {
   color: #20c93d;

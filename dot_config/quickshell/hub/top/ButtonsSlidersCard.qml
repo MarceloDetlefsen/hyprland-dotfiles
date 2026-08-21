@@ -234,11 +234,11 @@ Lib.TopCard {
         icon: wifiOn.value ? "wifi_connected.svg" : "wifi_off.svg"
         label: String(wifiSSID.value || "WiFi")
         active: Boolean(wifiOn.value)
-        onClicked: toggleWifi()
-        onRightClicked: {
+        onClicked: {
             root.closeRequested()
             Lib.Overlays.wifiOpen = true
         }
+        onRightClicked: toggleWifi()
       }
 
       Lib.ExpressiveButton {

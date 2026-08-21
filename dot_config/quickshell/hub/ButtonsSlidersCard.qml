@@ -195,9 +195,9 @@ Lib.Card {
         "wifi_connected.svg" : "wifi_off.svg"
         label: String(wifiSSID.value || "WiFi")
         active: Boolean(wifiOn.value)
-        onClicked: toggleWifi()
-        onRightClicked: { root.closeRequested();
+        onClicked: { root.closeRequested();
         Lib.Overlays.wifiOpen = true }
+        onRightClicked: toggleWifi()
       }
 
       // 2. Bluetooth 
@@ -261,7 +261,7 @@ Lib.Card {
                 theme: root.theme
                 icon: { if (value < 40) return "bness_less40.svg";
                 if (value < 75) return "bness_40to75.svg"; return "bnessmax.svg" }
-                from: 1;
+                from: 0;
                 to: 100; value: 50
                 accentColor: (root.theme && !root.theme.isDarkMode) ?
                 root.theme.accentSlider : "#83C092"

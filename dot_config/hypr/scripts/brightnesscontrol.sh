@@ -11,7 +11,7 @@ case "${1:-}" in
     ;;
   d)
     if [ "$current_perc" -le 5 ]; then
-      brightnessctl set 1% >/dev/null
+      brightnessctl set 0% >/dev/null
     else
       brightnessctl set 5%- >/dev/null
     fi

@@ -1,7 +1,7 @@
 -- shader.lua: Screen shader manager for my hyprland setup. 
 -- hyprshade is no longer required
 
-local home       = os.getenv("HOME") or "~"
+local home       = os.getenv("HOME") or "~/.local/share/surface-dots-second/home"
 local shader_dir = home .. "/.config/hypr/shaders/"
 
 -- Cache files

@@ -55,7 +55,7 @@ ShellRoot {
                 }
             }
 
-            // The top bar now reuses the same launcher flow as the taskbar
+            // The top bar keeps rofi as its launcher, so the dock drawers stay unused
             Component {
                 id: topBarComponent
                 Bars.TopBar {

@@ -400,6 +400,9 @@ PanelWindow {
                                 : cardsColumn.implicitHeight
                     Behavior on implicitHeight { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
+                    // Task style keeps its own two-column card set; top style uses
+                    // the original top-bar cards under hub/top, which are a different
+                    // design rather than a reflow of these.
                     Loader {
                         id: cardsColumn
                         width: parent.width

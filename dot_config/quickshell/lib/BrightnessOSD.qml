@@ -79,7 +79,7 @@ PanelWindow {
     }
 
     function _setBrightness(p) {
-        p = Math.max(1, Math.min(100, p))
+        p = Math.max(0, Math.min(100, p))
         percent = p
         setThrottle.pendingPercent = p
         if (!setThrottle.running) setThrottle.start()
@@ -332,7 +332,7 @@ PanelWindow {
                             cursorShape:  Qt.PointingHandCursor
 
                             function percentFromX(mx) {
-                                return Math.round(Math.max(1, Math.min(100,
+                                return Math.round(Math.max(0, Math.min(100,
                                     (mx / barTrack.width) * 100)))
                             }
 
