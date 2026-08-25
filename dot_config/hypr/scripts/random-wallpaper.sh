@@ -11,3 +11,8 @@ RANDOM_WALL=$(find "$WALLDIR" -type f \
 hyprctl hyprpaper preload "$RANDOM_WALL"
 sleep 0.15
 hyprctl hyprpaper wallpaper eDP-1,"$RANDOM_WALL"
+
+THEME_SCRIPT="$HOME/.config/hypr/scripts/apply-theme.sh"
+if [ -x "$THEME_SCRIPT" ]; then
+  "$THEME_SCRIPT" "$RANDOM_WALL"
+fi

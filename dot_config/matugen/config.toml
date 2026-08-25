@@ -1,0 +1,25 @@
+[config]
+
+[config.wallpaper]
+set = false
+command = "true"
+
+[templates.hyprland]
+input_path = "~/.config/matugen/templates/hyprland.conf"
+output_path = "~/.config/hypr/generated/colors.conf"
+
+[templates.kitty]
+input_path = "~/.config/matugen/templates/kitty.conf"
+output_path = "~/.config/kitty/generated/colors.conf"
+
+[templates.fastfetch]
+input_path = "~/.config/matugen/templates/fastfetch.jsonc"
+output_path = "~/.config/fastfetch/config.jsonc"
+
+[templates.quickshell_theme]
+input_path = "~/.config/matugen/templates/quickshell-theme.js"
+output_path = "~/.config/quickshell/theme.js"
+
+[templates.quickshell_palette]
+input_path = "~/.config/matugen/templates/quickshell-palette.json"
+output_path = "~/.config/quickshell/palette.json"

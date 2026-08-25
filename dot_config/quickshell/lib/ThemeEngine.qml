@@ -1,4 +1,5 @@
 import QtQuick
+import "../theme.js" as Theme
 
 QtObject {
     id: root
@@ -10,46 +11,44 @@ QtObject {
     // Surfaces
     readonly property color bgMain: Configuration.useCustomColors
         ? Configuration.customBg
-        : (isDarkMode ? "#141719" : "#F0ECE6")
-    readonly property color bgCard:      isDarkMode ? "#1e2326" : "#E3DED6"
-    readonly property color bgItem:      isDarkMode ? "#2d353b" : Qt.rgba(0, 0, 0, 0.05)
-    readonly property color bgItemHover: isDarkMode ? "#374145" : Qt.rgba(0, 0, 0, 0.08)
-    readonly property color bgWidget:    isDarkMode ? "#1e2326" : "#E3DED6"
+        : Theme.bgMain
+    readonly property color bgCard:      Theme.bgCard
+    readonly property color bgItem:      Theme.bgItem
+    readonly property color bgItemHover: Theme.bgItemHover
+    readonly property color bgWidget:    Theme.bgCard
 
     // Text
-    readonly property color textPrimary:   isDarkMode ? "#dde5dfc5" : "#252E33"
-    readonly property color textSecondary: isDarkMode ? "#9da9a0"   : "#546670"
-    readonly property color textOnAccent:  isDarkMode ? "#232a2e"   : "#F0ECE6"
+    readonly property color textPrimary:   Theme.fgMain
+    readonly property color textSecondary: Theme.fgMuted
+    readonly property color textOnAccent:  Theme.fgOnAccent
 
     // Accents
     readonly property color accent: Configuration.useCustomColors
         ? Configuration.customAccent
-        : (isDarkMode ? "#99a7c080" : "#4A6B70")
-    readonly property color accentBlue: Configuration.useCustomColors
-        ? Configuration.customAccent
-        : "#7AA1A6"
-    readonly property color accentRed:     isDarkMode ? "#e67e80" : "#c74042"
-    readonly property color accentSlider:  isDarkMode ? "#83C092" : "#4F6B5B"
-    readonly property color accentSlider2: isDarkMode ? "#f1af97" : "#d39984"
+        : Theme.accent
+    readonly property color accentBlue: Theme.accentBlue
+    readonly property color accentRed:   Theme.accentRed
+    readonly property color accentSlider:  Theme.accentSlider
+    readonly property color accentSlider2: Theme.accentSlider2
 
     // Lines and hovers
-    readonly property color border:          isDarkMode ? "#70a7c080"          : "#40A65046"
-    readonly property color outline:         isDarkMode ? Qt.rgba(1,1,1,0.10) : Qt.rgba(0,0,0,0.10)
-    readonly property color subtleFill:      isDarkMode ? Qt.rgba(1,1,1,0.05) : Qt.rgba(0,0,0,0.05)
-    readonly property color subtleFillHover: isDarkMode ? Qt.rgba(1,1,1,0.15) : Qt.rgba(0,0,0,0.10)
-    readonly property color hoverSpotlight:  isDarkMode ? Qt.rgba(1,1,1,0.14) : Qt.rgba(0,0,0,0.10)
+    readonly property color border:          Theme.border
+    readonly property color outline:         Theme.outline
+    readonly property color subtleFill:      Theme.subtleFill
+    readonly property color subtleFillHover: Theme.subtleFillHover
+    readonly property color hoverSpotlight:  Theme.hoverSpotlight
 
     // Sizing
-    readonly property int radiusOuter: 12
-    readonly property int radiusInner: 16
+    readonly property int radiusOuter: Theme.radiusOuter
+    readonly property int radiusInner: Theme.radiusInner
     readonly property int padCard:     12
     readonly property int gapCard:     10
     readonly property int btnH:        54
     readonly property int sliderH:     24
 
     // Used by the top-style calendar card
-    readonly property color weatherColor: isDarkMode ? "#9da9a0" : "#3c4841"
+    readonly property color weatherColor: Theme.weatherColor
 
-    readonly property string textFont: "Manrope"
-    readonly property string iconFont: "JetBrainsMono Nerd Font"
+    readonly property string textFont: Theme.textFont
+    readonly property string iconFont: Theme.iconFont
 }
