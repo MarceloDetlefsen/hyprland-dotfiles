@@ -8,6 +8,7 @@ TIMESTAMP_FILE="$CACHE_DIR/applist.timestamp"
 
 SEARCH_PATHS=(
     "$HOME/.local/share/applications"
+    "$HOME/.local/share/flatpak/exports/share/applications"
     "/usr/share/applications"
     "/var/lib/flatpak/exports/share/applications"
 )

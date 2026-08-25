@@ -272,7 +272,9 @@ Item {
         radius: cardMask.radius
         color: "transparent"
         border.width: skin.dark ? 0.5 : 1
-        border.color: skin.dark ? '#2ce4e3e3' : '#44000000'
+        border.color: skin.ctrl.cassiniSelBg !== ""
+            ? skin.ctrl.cassiniSelBg
+            : (skin.dark ? '#2ce4e3e3' : '#44000000')
         antialiasing: true
     }
 }

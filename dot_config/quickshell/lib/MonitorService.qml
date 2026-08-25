@@ -60,7 +60,7 @@ Scope {
 
     Process {
         id: query
-        command: ["hyprctl", "monitors", "-j"]
+        command: ["/usr/bin/hyprctl", "monitors", "-j"]
         stdout: StdioCollector {
             onStreamFinished: {
                 var list = []
@@ -131,7 +131,7 @@ Scope {
         if (spec.scale     !== undefined) parts.push("scale = " + spec.scale)
         if (spec.mirror    !== undefined) parts.push('mirror = "' + spec.mirror + '"')
         if (spec.disabled  !== undefined) parts.push("disabled = " + (spec.disabled ? "true" : "false"))
-        Quickshell.execDetached(["hyprctl", "eval", "hl.monitor({ " + parts.join(", ") + " })"])
+        Quickshell.execDetached(["/usr/bin/hyprctl", "eval", "hl.monitor({ " + parts.join(", ") + " })"])
     }
 
     function _on(output) {

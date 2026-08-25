@@ -8,8 +8,8 @@ Item {
 
     property bool isDarkMode: ctrl.isDarkMode
 
-    property url imgDark: Qt.resolvedUrl("livingthings/dark.png")
-    property url imgLight: Qt.resolvedUrl("livingthings/light.png")
+    property url imgDark: "file:///home/chelo/Imágenes/Personal/VeteranDirectorsCut.jpg"
+    property url imgLight: "file:///home/chelo/Imágenes/Personal/VeteranDirectorsCut.jpg"
 
     QtObject {
         id: theme
@@ -228,7 +228,9 @@ Item {
         radius: bgMask.radius
         color: "transparent"
         border.width: 1
-        border.color: skin.isDarkMode ? '#d1a8c080' : '#435133'
+        border.color: skin.ctrl.livingAccent !== ""
+            ? skin.ctrl.livingAccent
+            : (skin.isDarkMode ? '#d1a8c080' : '#435133')
         antialiasing: true
         enabled: false
     }

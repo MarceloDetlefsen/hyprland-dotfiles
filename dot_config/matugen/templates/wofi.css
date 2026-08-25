@@ -1,0 +1,59 @@
+* {
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 15px;
+}
+
+window {
+  margin: 0px;
+  padding: 18px;
+  border-radius: 20px;
+  background-color: {{ colors.surface_container_highest.default.rgba | set_alpha: 0.94 }};
+  border: 1px solid {{ colors.outline.default.rgba | set_alpha: 0.92 }};
+}
+
+#outer-box,
+#inner-box {
+  margin: 0px;
+}
+
+#input {
+  margin-bottom: 14px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid {{ colors.outline.default.rgba | set_alpha: 0.70 }};
+  outline: none;
+  background-color: {{ colors.surface_container_high.default.rgba | set_alpha: 0.90 }};
+  color: {{ colors.on_surface.default.hex }};
+}
+
+#input:focus {
+  border-color: {{ colors.primary.default.hex }};
+}
+
+#scroll {
+  margin-top: 4px;
+}
+
+#entry {
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin: 4px 0px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: {{ colors.on_surface.default.hex }};
+}
+
+#entry:hover {
+  background-color: {{ colors.surface_container_high.default.rgba | set_alpha: 0.86 }};
+  border-color: {{ colors.outline.default.rgba | set_alpha: 0.85 }};
+}
+
+#entry:selected {
+  background-color: {{ colors.primary.default.hex }};
+  color: {{ colors.on_primary.default.hex }};
+  border-color: {{ colors.primary.default.hex }};
+}
+
+#img {
+  margin-right: 14px;
+}

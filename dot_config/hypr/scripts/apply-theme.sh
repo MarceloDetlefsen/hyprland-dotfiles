@@ -20,6 +20,10 @@ fi
 
 matugen image "$WALLPAPER" -m dark --source-color-index 0
 
+if pgrep -x mako >/dev/null 2>&1; then
+    makoctl reload >/dev/null 2>&1 || pkill -HUP mako >/dev/null 2>&1 || true
+fi
+
 PALETTE_FILE="$HOME/.config/quickshell/palette.json"
 SETTINGS_FILE="$HOME/.config/quickshell/lib/usersettings.json"
 
@@ -46,7 +50,8 @@ hyprctl reload >/dev/null 2>&1 || true
 if pgrep -x qs >/dev/null 2>&1; then
     pkill -x qs >/dev/null 2>&1 || true
     sleep 0.3
-    if command -v qs >/dev/null 2>&1; then
-        nohup qs >/dev/null 2>&1 &
+    QSBIN="$(command -v qs || command -v quickshell || true)"
+    if [ -n "$QSBIN" ]; then
+        nohup "$QSBIN" >/dev/null 2>&1 &
     fi
 fi

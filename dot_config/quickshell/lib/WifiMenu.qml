@@ -23,7 +23,7 @@ PanelWindow {
 
     // Hide hyprland borders
     function setBordersHidden(shouldHide) {
-        Quickshell.execDetached(["hyprctl", "keyword", "general:border_size", shouldHide ? "0" : "1"])
+        Quickshell.execDetached(["/usr/bin/hyprctl", "keyword", "general:border_size", shouldHide ? "0" : "1"])
     }
 
     onVisibleChanged: {

@@ -196,7 +196,7 @@ M.complex_modes = {
             hl.exec_cmd("swww img " .. home .. "/Pictures/retro/van.png --transition-type grow --transition-pos 0.5,0.5 --transition-duration 1.5 --transition-fps 60")
 
             hl.exec_cmd("pkill qs")
-            hl.exec_cmd("qs -p " .. home .. "/.config/quickshell/lib/ThemeOSD.qml")
+            hl.exec_cmd("/usr/bin/qs -p " .. home .. "/.config/quickshell/lib/ThemeOSD.qml")
             hl.exec_cmd("waybar -c ~/.config/waybar/config -s ~/.config/waybar/style.css &")
 
             hl.config({
@@ -222,7 +222,7 @@ M.complex_modes = {
             write_file(crt_state_file, "off")
 
             hl.exec_cmd("pkill waybar")
-            hl.exec_cmd("qs &")
+            hl.exec_cmd("/usr/bin/qs &")
 
             local saved_theme = read_file(theme_mode_file, "dark")
             local wp = saved_theme == "light" and home .. "/Pictures/desktop/l2.png" or home .. "/Pictures/desktop/1.png"

@@ -89,8 +89,8 @@ end)
 
 -- UI / BARS / NOTIFICATIONS
 hl.on("hyprland.start", function()
-    hl.exec_cmd("qs")
-    hl.exec_cmd("mako")
+    hl.exec_cmd("/usr/bin/qs")
+    hl.exec_cmd("/usr/bin/mako")
 end)
 
 -- HYPRLAND ECOSYSTEM

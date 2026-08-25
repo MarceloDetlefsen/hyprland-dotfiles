@@ -21,6 +21,12 @@ PanelWindow {
 
     function withAlpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
 
+    function hyprctlCmd(args) {
+        var sig = Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
+        var base = ["/usr/bin/hyprctl", "--instance", (sig && sig.length > 0) ? sig : "0"]
+        return base.concat(args)
+    }
+
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     visible: shell.activeHeight > 1
@@ -194,10 +200,11 @@ PanelWindow {
 
     function applyShader(path) {
         drawerWin.close()
+        var code = 'hl.config({ decoration = { screen_shader = ' + JSON.stringify(path === "OFF" ? "" : path) + ' } })'
         if (path === "OFF") {
-            Quickshell.execDetached(["hyprctl", "keyword", "decoration:screen_shader", ""])
+            Quickshell.execDetached(hyprctlCmd(["eval", code]))
         } else {
-            Quickshell.execDetached(["hyprctl", "keyword", "decoration:screen_shader", path])
+            Quickshell.execDetached(hyprctlCmd(["eval", code]))
         }
     }
 
@@ -302,7 +309,6 @@ PanelWindow {
 
         var query = searchField.text.toLowerCase().trim()
         function hit(name) { return query === "" || name.toLowerCase().includes(query) }
-
         favoritesModel.clear()
         for (var p = 0; p < drawerWin.pinnedFiles.length; p++) {
             for (var i = 0; i < appModel.count; i++) {

@@ -16,6 +16,14 @@ output_path = "~/.config/kitty/generated/colors.conf"
 input_path = "~/.config/matugen/templates/fastfetch.jsonc"
 output_path = "~/.config/fastfetch/config.jsonc"
 
+[templates.wofi]
+input_path = "~/.config/matugen/templates/wofi.css"
+output_path = "~/.config/wofi/style.css"
+
+[templates.mako]
+input_path = "~/.config/matugen/templates/mako.conf"
+output_path = "~/.config/mako/config"
+
 [templates.quickshell_theme]
 input_path = "~/.config/matugen/templates/quickshell-theme.js"
 output_path = "~/.config/quickshell/theme.js"

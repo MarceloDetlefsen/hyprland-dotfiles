@@ -20,20 +20,25 @@ Rectangle {
     readonly property color cAccent:  isDarkMode ? "#a7c080" : (hasTheme ? theme.accent        : "#3c4841")
     readonly property color cFgMuted: isDarkMode ? "#9da9a0" : (hasTheme ? theme.textSecondary : "#232a23")
     readonly property color cFgMain:  isDarkMode ? "#d3c6aa" : (hasTheme ? theme.textPrimary   : "#3c4841")
+    readonly property color cBorder:  isDarkMode ? Qt.rgba(0.82, 0.76, 0.66, 0.22) : Qt.rgba(0.22, 0.29, 0.25, 0.22)
+    readonly property color cBorderHot: hasTheme ? theme.accent : cAccent
 
     signal clicked()
 
     radius: 22
     color: hovered ? cBgHover : cBg
     antialiasing: true
-    border.width: 0
+    clip: true
+    border.width: 1
+    border.color: pressed ? cBorderHot : (hovered ? cBorderHot : cBorder)
 
     property bool hovered: false
 
     // subtle lift on hover
-    scale: pressed ? 0.985 : (hovered ? 1.01 : 1.0)
-    Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-    Behavior on color { ColorAnimation { duration: 140 } }
+    scale: pressed ? 0.98 : (hovered ? 1.008 : 1.0)
+    Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+    Behavior on color { ColorAnimation { duration: 180 } }
+    Behavior on border.color { ColorAnimation { duration: 180 } }
 
     // tiny highlight
     Rectangle {
@@ -41,7 +46,17 @@ Rectangle {
         radius: parent.radius
         color: cSheen
         opacity: hovered ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 140 } }
+        Behavior on opacity { NumberAnimation { duration: 180 } }
+    }
+
+    Rectangle {
+        width: 4
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        radius: parent.radius
+        color: cBorderHot
+        opacity: hovered ? 0.95 : 0.65
     }
 
     // ripple
@@ -53,13 +68,15 @@ Rectangle {
     RowLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 10
+        spacing: 12
 
         Rectangle {
             width: 30
             height: 30
             radius: 999
             color: cIconBg
+            border.width: 1
+            border.color: pressed ? cBorderHot : Qt.rgba(cBorder.r, cBorder.g, cBorder.b, 0.7)
             Layout.alignment: Qt.AlignVCenter
 
             Text {

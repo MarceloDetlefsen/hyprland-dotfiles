@@ -14,7 +14,7 @@ PanelWindow {
 
         // Hides window borders when the hub is open 
         function setBordersHidden(hidden) {
-            Quickshell.execDetached(["hyprctl", "keyword", "general:border_size", hidden ? "0" : "1"])
+            Quickshell.execDetached(["/usr/bin/hyprctl", "keyword", "general:border_size", hidden ? "0" : "1"])
         }
 
         // Single entry point for outside callers, so the other panels get cleared
