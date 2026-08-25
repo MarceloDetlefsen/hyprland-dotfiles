@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import "../lib" as Lib
 
 PanelWindow {
     id: root
@@ -15,6 +16,10 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     WlrLayershell.exclusiveZone: -1
     WlrLayershell.namespace: "wifi-menu"
+
+    Lib.ThemeEngine {
+        id: theme
+    }
 
     // Hide hyprland borders
     function setBordersHidden(shouldHide) {
@@ -108,15 +113,15 @@ PanelWindow {
     }
 
     // -------- Colors / Fonts --------
-    readonly property color cBg:      isDarkMode ? "#6b3f443c" : "#F0ECE6"
-    readonly property color cBgAlt:   isDarkMode ? '#6b3f443c' : '#cb97a382'
-    readonly property color cCard:    isDarkMode ? "#282c2d" : "#F0ECE6"
-    readonly property color cFg:      isDarkMode ? "#D3C6AA" : "#1e2326"
-    readonly property color cMuted:   isDarkMode ? "#859289" : '#4d6049'
-    readonly property color cBorder:  isDarkMode ? '#d4708154' : '#d4586a3c'
-    readonly property color cGreen:   isDarkMode ? "#A7C080" : "#576830"
-    readonly property color cRed:     isDarkMode ? "#E67E80" : '#b13c3a'
-    readonly property color cBlue:    isDarkMode ? '#A7C080' : '#5c7267'
+    readonly property color cBg:      theme.bgMain
+    readonly property color cBgAlt:   Qt.rgba(theme.bgCard.r, theme.bgCard.g, theme.bgCard.b, 0.82)
+    readonly property color cCard:    theme.bgCard
+    readonly property color cFg:      theme.textPrimary
+    readonly property color cMuted:   theme.textSecondary
+    readonly property color cBorder:  Qt.rgba(theme.outline.r, theme.outline.g, theme.outline.b, 0.88)
+    readonly property color cGreen:   theme.accent
+    readonly property color cRed:     theme.accentRed
+    readonly property color cBlue:    theme.accentBlue
     readonly property int   cRadius: 10
 
     readonly property string fontText: "Inter"
