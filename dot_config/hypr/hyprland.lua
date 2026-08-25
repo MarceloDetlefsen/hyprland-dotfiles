@@ -7,6 +7,24 @@ local var_mod = "SUPER"
 -- =========================
 require("env")
 
+local function read_border_colors()
+    local path = os.getenv("HOME") .. "/.config/hypr/generated/colors.conf"
+    local active = "rgba(8d9199ff)"
+    local inactive = "rgba(8d9199aa)"
+    local f = io.open(path, "r")
+    if not f then
+        return active, inactive
+    end
+    for line in f:lines() do
+        local a = line:match("col%.active_border%s*=%s*(rgba%([^)]+%))")
+        if a then active = a end
+        local i = line:match("col%.inactive_border%s*=%s*(rgba%([^)]+%))")
+        if i then inactive = i end
+    end
+    f:close()
+    return active, inactive
+end
+
 -- plugin = /var/cache/hyprpm/chelo/hyprland-plugins/hyprexpo.so
 hl.monitor({
     output = "",
@@ -130,14 +148,15 @@ hl.device({
 -- bind = , mouse:276, exec, ydotool key 125:1 106:1 106:0 125:0
 
 -- ---------- GENERAL ----------
+local active_border, inactive_border = read_border_colors()
 hl.config({
     general = {
         gaps_in = 1,
         gaps_out = 3,
         border_size = 2,
         col = {
-            active_border = "rgba(87b158ff)",
-            inactive_border = "rgba(595959aa)",
+            active_border = active_border,
+            inactive_border = inactive_border,
         },
         layout = "dwindle",
     },

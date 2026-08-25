@@ -11,6 +11,7 @@ local rm_restore_file = cache_dir .. "/reading_mode_restore"
 local rm_state_file   = cache_dir .. "/reading_mode"
 local nl_state_file   = cache_dir .. "/night_light"
 local crt_state_file  = cache_dir .. "/crt_mode"
+local border_colors_file = home .. "/.config/hypr/generated/colors.conf"
 
 local theme_script    = home .. "/.config/quickshell/utils/theme-mode.sh"
 
@@ -56,6 +57,23 @@ local function read_file(path, fallback)
     return (content ~= "") and content or fallback
 end
 
+local function read_border_colors()
+    local active = "rgba(8d9199ff)"
+    local inactive = "rgba(8d9199aa)"
+    local f = io.open(border_colors_file, "r")
+    if not f then
+        return active, inactive
+    end
+    for line in f:lines() do
+        local v = line:match("col%.active_border%s*=%s*(rgba%([^)]+%))")
+        if v then active = v end
+        local i = line:match("col%.inactive_border%s*=%s*(rgba%([^)]+%))")
+        if i then inactive = i end
+    end
+    f:close()
+    return active, inactive
+end
+
 local function apply_theme(theme)
     M.ui_state.theme = theme
     hl.exec_cmd(theme_script .. " " .. theme .. " --quiet --no-wallpaper")
@@ -68,13 +86,14 @@ local function switch_theme(restore_file, new_theme)
 end
 
 local function restore_defaults()
+    local active_border, inactive_border = read_border_colors()
     hl.config({
         general = {
             gaps_in         = M.defaults.gaps_in,
             gaps_out        = M.defaults.gaps_out,
             border_size     = M.defaults.border_size,
-            ["col.active_border"]   = M.defaults.active_border,
-            ["col.inactive_border"] = M.defaults.inactive_border,
+            ["col.active_border"]   = active_border,
+            ["col.inactive_border"] = inactive_border,
         },
         decoration = {
             rounding     = M.defaults.rounding,
