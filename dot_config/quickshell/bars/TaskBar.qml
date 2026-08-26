@@ -51,10 +51,47 @@ PanelWindow {
         property bool hasWindows: false
         property int activeWsId: Hyprland.focusedMonitor?.activeWorkspace?.id ?? 1
         property bool isDarkMode: theme.isDarkMode
+        property string osLogoName: "distributor-logo-archlinux"
+        readonly property string osLogoSource: "image://icon/" + osLogoName
 
         // Shared clock state
         property string clockTime: Qt.formatDateTime(new Date(), "h:mm AP")
         property string clockDate: Qt.formatDateTime(new Date(), "ddd, MMM d")
+
+        function pickOsLogo(id, like) {
+            id = String(id || "").toLowerCase()
+            like = String(like || "").toLowerCase()
+
+            if (id.includes("manjaro") || like.includes("manjaro")) return "distributor-logo-manjaro"
+            if (id.includes("arch") || like.includes("arch")) return "distributor-logo-archlinux"
+            if (id.includes("endeavouros") || like.includes("endeavouros")) return "distributor-logo-endeavouros"
+            if (id.includes("fedora") || like.includes("fedora")) return "distributor-logo-fedora"
+            if (id.includes("nixos") || like.includes("nixos")) return "distributor-logo-nixos"
+            if (id.includes("debian") || like.includes("debian")) return "distributor-logo-debian"
+            if (id.includes("ubuntu") || like.includes("ubuntu")) return "distributor-logo-ubuntu"
+            if (id.includes("mint") || like.includes("mint")) return "distributor-logo-linux-mint"
+            if (id.includes("opensuse") || like.includes("suse")) return "distributor-logo-opensuse"
+            if (id.includes("pop")) return "distributor-logo-pop-os"
+            if (id.includes("kali")) return "distributor-logo-kali-linux"
+            if (id.includes("void")) return "distributor-logo-void"
+            if (id.includes("elementary")) return "distributor-logo-elementary"
+            return "distributor-logo-archlinux"
+        }
+
+        function applyOsLogoFromRelease(text) {
+            var id = ""
+            var like = ""
+            var lines = String(text || "").split(/\r?\n/)
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i]
+                if (line.indexOf("ID=") === 0) {
+                    id = line.substring(3).replace(/^"/, "").replace(/"$/, "")
+                } else if (line.indexOf("ID_LIKE=") === 0) {
+                    like = line.substring(8).replace(/^"/, "").replace(/"$/, "")
+                }
+            }
+            osLogoName = pickOsLogo(id, like)
+        }
 
     Timer {
         interval: 1000
@@ -71,6 +108,13 @@ PanelWindow {
     // Instantiate the engine from ../lib/ThemeEngine.qml  
     Lib.ThemeEngine {
         id: theme
+    }
+
+    FileView {
+        id: osReleaseFile
+        path: "/etc/os-release"
+        preload: true
+        onLoaded: taskbar.applyOsLogoFromRelease(text())
     }
 
     // -----------------------------------------------
@@ -487,9 +531,9 @@ PanelWindow {
                     Layout.preferredWidth: 48
                     Layout.preferredHeight: 48
                     
-                    DockButton {
+                DockButton {
                         anchors.centerIn: parent
-                        iconPath: "../lib/arch.svg"
+                        iconPath: taskbar.osLogoSource
                         tooltipText: "Applications"
                         onClicked: taskbar.launcherClicked()
                     }
@@ -716,13 +760,12 @@ PanelWindow {
                             anchors.centerIn: parent
                             width:21; height: 21
                             property color color: {
-                                if (hoverLaunch.hovered) return taskbar.isDarkMode ? "#89b4fa" : "#1e66f5"
-                                return taskbar.isDarkMode ? "#89b4fa" : "#1e66f5"
+                                return pal.accent
                             }
 
                             Image { 
                                 id: lImg
-                                source: "../lib/arch.svg"
+                                source: taskbar.osLogoSource
                                 visible: false
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectFit
