@@ -1,32 +1,29 @@
 .pragma library
 
-// will be completely replaced by lib/ThemeEngine.qml soon
+var bgMain  = "#1a1112"
+var bgPanel = "rgba(61, 50, 51, 0.88)"
+var bgCard  = "#261d1e"
+var bgItem  = "#22191a"
+var bgItemHover = "#312828"
 
-// Everforest-ish
-var bgMain  = "#141719"
-var bgPanel = "rgba(20,23,25,0.88)"
-var bgCard  = "#1e2326"
-var bgItem  = "#2d353b"
-var bgItemHover = "#374145"
+var fgMain  = "#f0dedf"
+var fgMuted = "#d7c1c3"
+var fgOnAccent = "#561d28"
 
-var fgMain  = "#E5DFC5"
-var fgMuted = "#9da9a0"
-var fgOnAccent = "#232a2e"
+var accent = "#ffb2bb"
+var accentBlue = "#e5bdc0"
+var accentRed  = "#ffb4ab"
+var accentSlider = "#e9bf8f"
+var accentSlider2 = "#72333d"
 
-var accent = "#99a7c080"
-var accentBlue = "#7fbbb3"
-var accentRed  = "#e67e80"
-var accentSlider = "#83C092"
-var accentSlider2 = "#f1af97"
+var border = "rgba(159, 140, 142, 0.8)"
+var outline = "rgba(159, 140, 142, 0.2)"
+var subtleFill = "rgba(240, 222, 223, 0.05)"
+var subtleFillHover = "rgba(240, 222, 223, 0.15)"
+var hoverSpotlight = "rgba(240, 222, 223, 0.14)"
 
-var border = "#70a7c080"
-var outline = "#1a1a1a"
-var subtleFill = "rgba(255,255,255,0.05)"
-var subtleFillHover = "rgba(255,255,255,0.15)"
-var hoverSpotlight = "rgba(255,255,255,0.14)"
-
-var weatherd="#9da9a0"
-var weatherl="#3c4841"
+var weatherd = "#d7c1c3"
+var weatherl = "#524344"
 var weatherColor = weatherd
 
 // Sizing

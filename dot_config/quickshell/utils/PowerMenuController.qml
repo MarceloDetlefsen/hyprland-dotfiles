@@ -155,7 +155,11 @@ FocusScope {
         close(function() {
             if (cmd === "lock") Quickshell.execDetached(["hyprlock"])
             if (cmd === "suspend") Quickshell.execDetached(["systemctl", "suspend"])
-            if (cmd === "logout") Quickshell.execDetached(["bash", "-lc", "loginctl terminate-session \"$XDG_SESSION_ID\""])
+            if (cmd === "logout") Quickshell.execDetached([
+                "bash",
+                "-lc",
+                "hyprctl dispatch exit || loginctl terminate-session \"$XDG_SESSION_ID\""
+            ])
             if (cmd === "reboot") Quickshell.execDetached(["systemctl", "reboot"])
             if (cmd === "shutdown") Quickshell.execDetached(["systemctl", "poweroff"])
         })

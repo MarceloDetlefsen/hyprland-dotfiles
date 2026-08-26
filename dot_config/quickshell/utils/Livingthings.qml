@@ -8,8 +8,8 @@ Item {
 
     property bool isDarkMode: ctrl.isDarkMode
 
-    property url imgDark: "file:///home/chelo/Imágenes/Personal/VeteranDirectorsCut.jpg"
-    property url imgLight: "file:///home/chelo/Imágenes/Personal/VeteranDirectorsCut.jpg"
+    property url imgDark: "file://~/Imágenes/Personal/VeteranDirectorsCut.jpg"
+    property url imgLight: "file://~/Imágenes/Personal/VeteranDirectorsCut.jpg"
 
     QtObject {
         id: theme
