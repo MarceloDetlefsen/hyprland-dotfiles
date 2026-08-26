@@ -155,11 +155,9 @@ FocusScope {
         close(function() {
             if (cmd === "lock") Quickshell.execDetached(["hyprlock"])
             if (cmd === "suspend") Quickshell.execDetached(["systemctl", "suspend"])
-            if (cmd === "logout") Quickshell.execDetached([
-                "bash",
-                "-lc",
-                "hyprctl dispatch exit || loginctl terminate-session \"$XDG_SESSION_ID\""
-            ])
+            // Logout should exit Hyprland and hand control back to SDDM.
+            // Lua-config Hyprland expects the dispatcher expression here, not the legacy "exit" token.
+            if (cmd === "logout") Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"])
             if (cmd === "reboot") Quickshell.execDetached(["systemctl", "reboot"])
             if (cmd === "shutdown") Quickshell.execDetached(["systemctl", "poweroff"])
         })
