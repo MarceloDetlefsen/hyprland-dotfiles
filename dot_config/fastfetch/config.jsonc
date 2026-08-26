@@ -59,11 +59,6 @@
             "keyColor": "#89b4fa"
         },
         {
-            "type": "icons",
-            "key": "󰀻 Icons",
-            "keyColor": "#89b4fa"
-        },
-        {
             "type": "terminal",
             "key": " Terminal",
             "keyColor": "#89b4fa"
@@ -71,6 +66,13 @@
         {
             "type": "host",
             "key": "󰌢 PC",
+            "keyColor": "#a6e3a1"
+        },
+        {
+            "type": "Disk",
+            "key": "󰋊 Storage",
+            "folders": "/",
+            "format": "{size-used} / {size-total} ({size-percentage})",
             "keyColor": "#a6e3a1"
         },
         {

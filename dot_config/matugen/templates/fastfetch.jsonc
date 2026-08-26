@@ -59,11 +59,6 @@
             "keyColor": "{{ colors.secondary.default.hex }}"
         },
         {
-            "type": "icons",
-            "key": "󰀻 Icons",
-            "keyColor": "{{ colors.secondary.default.hex }}"
-        },
-        {
             "type": "terminal",
             "key": " Terminal",
             "keyColor": "{{ colors.secondary.default.hex }}"
@@ -71,6 +66,13 @@
         {
             "type": "host",
             "key": "󰌢 PC",
+            "keyColor": "{{ colors.tertiary.default.hex }}"
+        },
+        {
+            "type": "Disk",
+            "key": "󰋊 Storage",
+            "folders": "/",
+            "format": "{size-used} / {size-total} ({size-percentage})",
             "keyColor": "{{ colors.tertiary.default.hex }}"
         },
         {
