@@ -1,26 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+trim() {
+  tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+}
+
 if command -v nmcli >/dev/null 2>&1; then
-  connected_ethernet=$(nmcli -t -f TYPE,STATE dev status 2>/dev/null | awk -F: '$1=="ethernet" && $2=="connected" {print 1; exit}' || true)
-  if [[ "${connected_ethernet:-0}" == "1" ]]; then
-    echo "Ethernet"
-    exit 0
-  fi
-
-  wifi_enabled=$(nmcli -t -f WIFI g 2>/dev/null | head -n1 || true)
-  if [[ "$wifi_enabled" == "enabled" ]]; then
-    ssid=$(nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1=="yes" {print $2; exit}' || true)
-    if [[ -n "${ssid:-}" ]]; then
-      echo "$ssid"
-      exit 0
-    fi
-
-    conn=$(nmcli -t -f NAME,TYPE,DEVICE connection show --active 2>/dev/null | awk -F: '$2=="802-11-wireless" {print $1; exit}' || true)
-    if [[ -n "${conn:-}" ]]; then
+  dev=$(nmcli -t -f DEVICE,TYPE,STATE dev status 2>/dev/null | awk -F: '$3=="connected" && ($2=="wifi" || $2=="ethernet") {print $1; exit}' || true)
+  if [[ -n "${dev:-}" ]]; then
+    conn=$(nmcli -g GENERAL.CONNECTION dev show "$dev" 2>/dev/null | head -n1 | trim || true)
+    if [[ -n "${conn:-}" && "$conn" != "--" ]]; then
       echo "$conn"
       exit 0
     fi
+  fi
+
+  conn=$(nmcli -t -f IN-USE,SSID dev wifi list 2>/dev/null | awk -F: '$1=="*" {print $2; exit}' | trim || true)
+  if [[ -n "${conn:-}" ]]; then
+    echo "$conn"
+    exit 0
+  fi
+fi
+
+if command -v iwgetid >/dev/null 2>&1; then
+  ssid=$(iwgetid -r 2>/dev/null | trim || true)
+  if [[ -n "${ssid:-}" ]]; then
+    echo "$ssid"
+    exit 0
   fi
 fi
 

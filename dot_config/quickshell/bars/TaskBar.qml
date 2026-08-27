@@ -870,7 +870,7 @@ PanelWindow {
                         function activateWorkspaceAt(localX) {
                             const item = workspaceAt(localX)
                             if (!item) return false
-                            Lib.Shell.det("hyprctl dispatch workspace " + item.wsId)
+                            Quickshell.execDetached(["/usr/bin/hyprctl", "dispatch", "focusworkspaceoncurrentmonitor", String(item.wsId)])
                             return true
                         }
 
@@ -957,6 +957,14 @@ PanelWindow {
                                     width: hasWindows ? (winCount * 22 + 12) : 26
                                     height: 34
 
+                                    HoverHandler {
+                                        id: wsHover
+                                        onHoveredChanged: {
+                                            if (hovered) wsContainer.hoveredId = wsId
+                                            else if (wsContainer.hoveredId === wsId) wsContainer.hoveredId = 0
+                                        }
+                                    }
+
                                     y: wsContainer.pressedId === wsId ? 1 : ((!isActive && wsContainer.hoveredId === wsId) ? -2 : 0)
                                     scale: (wsContainer.pressedId === wsId ? 0.96 : 1.0) * ((!isActive && wsContainer.hoveredId === wsId) ? 1.10 : 1.0)
                                     Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
@@ -1028,32 +1036,19 @@ PanelWindow {
                                             }
                                         }
                                     }
-                                }
-                            }
-                        }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            z: 20
-                            acceptedButtons: Qt.LeftButton
-                            cursorShape: Qt.PointingHandCursor
-                            hoverEnabled: true
-                            propagateComposedEvents: true
-                            onPositionChanged: (mouse) => wsContainer.updateHover(mouse.x)
-                            onExited: wsContainer.hoveredId = 0
-                            onPressed: (mouse) => {
-                                wsContainer.pressedId = wsContainer.workspaceAt(mouse.x)?.wsId ?? 0
-                                mouse.accepted = false
-                            }
-                            onReleased: (mouse) => {
-                                if (wsContainer.pressedId > 0) {
-                                    wsContainer.pressedId = 0
+                                    MouseArea {
+                                        id: wsPress
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        acceptedButtons: Qt.LeftButton
+                                        cursorShape: Qt.PointingHandCursor
+                                        onPressed: wsContainer.pressedId = wsId
+                                        onReleased: if (wsContainer.pressedId === wsId) wsContainer.pressedId = 0
+                                        onCanceled: if (wsContainer.pressedId === wsId) wsContainer.pressedId = 0
+                                        onClicked: Quickshell.execDetached(["/usr/bin/hyprctl", "dispatch", "focusworkspaceoncurrentmonitor", String(wsId)])
+                                    }
                                 }
-                                mouse.accepted = false
-                            }
-                            onClicked: (mouse) => {
-                                wsContainer.activateWorkspaceAt(mouse.x)
-                                mouse.accepted = true
                             }
                         }
                     }
@@ -1091,7 +1086,7 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         height: parent.height
                         width: visible ? musicRow.implicitWidth : 0
-                        visible: parent.parent.hasMedia
+                        visible: parent.hasMedia
                         opacity: visible ? 1.0 : 0.0
                         Behavior on opacity {
                             NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
