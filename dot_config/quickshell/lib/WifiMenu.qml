@@ -29,8 +29,11 @@ PanelWindow {
     onVisibleChanged: {
         setBordersHidden(visible)
             if (!visible) {
+                cancelConnectionFlow()
                 viewStack.currentIndex = 0 // Go back to the main list
                 targetSsid = ""
+                targetIsEnterprise = false
+                enteredUser = ""
                 enteredPass = ""
             }
             else {
@@ -41,6 +44,7 @@ PanelWindow {
 
     // restored when the app quits completely
     Component.onDestruction: {
+        cancelConnectionFlow()
         setBordersHidden(false)
     }
         
@@ -164,6 +168,19 @@ PanelWindow {
 
     property string pendingSavedUuid: ""
     property string pendingSavedSsid: ""
+    property string forgetTargetUuid: ""
+    property var connectionFlow: null
+    property string runnerMode: ""
+    property string runnerSuccessStatus: ""
+    property string runnerFailureStatus: ""
+    property bool connectionCommandOutputReady: false
+    property bool connectionCommandExited: false
+    property int connectionCommandExitCode: -1
+    property string connectionCommandOutput: ""
+    property bool connectionProbeBusy: false
+
+    readonly property int connectionVerifyInterval: 1000
+    readonly property int connectionVerifyTimeout: 30000
 
     Timer {
         id: statusTimer
@@ -191,6 +208,13 @@ PanelWindow {
         interval: scanDebounceDelay
         repeat: false
         onTriggered: performScan()
+    }
+
+    Timer {
+        id: connectionVerifyTimer
+        interval: connectionVerifyInterval
+        repeat: true
+        onTriggered: pollConnectionState()
     }
 
     function setStatus(msg, bad) {
@@ -221,6 +245,318 @@ PanelWindow {
         const s = String(sec || "").trim()
         if (s === "" || s === "--") return "Open"
         return "Secured"
+    }
+
+    function stopConnectionFlow(clearStatus) {
+        connectionVerifyTimer.stop()
+        processWatchdog.stop()
+        connectionProbeBusy = false
+        connectionCommandOutputReady = false
+        connectionCommandExited = false
+        connectionCommandExitCode = -1
+        connectionCommandOutput = ""
+        connectionFlow = null
+        runnerMode = ""
+        runnerSuccessStatus = ""
+        runnerFailureStatus = ""
+        if (clearStatus) isBusy = false
+    }
+
+    function resetConnectionResultState() {
+        connectionCommandOutputReady = false
+        connectionCommandExited = false
+        connectionCommandExitCode = -1
+        connectionCommandOutput = ""
+        connectionProbeBusy = false
+    }
+
+    function connectionStep(args, optional) {
+        return {
+            args: args,
+            optional: !!optional
+        }
+    }
+
+    function connectionOutputSuggestsPasswordPrompt(out) {
+        const text = String(out || "").toLowerCase()
+        return text.includes("secrets were required") ||
+               text.includes("no suitable secrets") ||
+               text.includes("need-auth") ||
+               text.includes("password required") ||
+               text.includes("se requieren contrase") ||
+               text.includes("clave de cifrado") ||
+               text.includes("claves de cifrado") ||
+               text.includes("contraseña") ||
+               text.includes("contraseñas")
+    }
+
+    function connectionOutputSuggestsTimeout(out) {
+        const text = String(out || "").toLowerCase()
+        return text.includes("timeout") || text.includes("timed out")
+    }
+
+    function connectionOutputSuggestsMissingProfile(out) {
+        const text = String(out || "").toLowerCase()
+        return text.includes("not found") ||
+               text.includes("couldn't be found") ||
+               text.includes("unknown connection") ||
+               text.includes("no connection")
+    }
+
+    function connectionOutputToMessage(out, fallback) {
+        const raw = String(out || "").trim()
+        if (raw.length > 0) return raw.split(/\r?\n/).slice(-6).join("\n")
+        return fallback
+    }
+
+    function startConnectionFlow(steps, ssid, uuid, isEnterprise) {
+        if (isBusy) return
+
+        stopConnectionFlow(false)
+        connectionFlow = {
+            id: Date.now(),
+            steps: steps,
+            stepIndex: 0,
+            targetSsid: ssid || "",
+            targetUuid: uuid || "",
+            targetIsEnterprise: !!isEnterprise,
+            verifyElapsed: 0,
+            optionalStep: false
+        }
+        pendingSavedUuid = uuid || ""
+        pendingSavedSsid = ssid || ""
+        targetSsid = ssid || ""
+        targetIsEnterprise = !!isEnterprise
+        errorBox.visible = false
+        isBusy = true
+        runnerMode = "connection"
+        processWatchdog.restart()
+        setStatus("Working…", false)
+        runCurrentConnectionStep()
+    }
+
+    function runCurrentConnectionStep() {
+        const flow = connectionFlow
+        if (!flow) return
+        if (flow.stepIndex >= flow.steps.length) {
+            beginConnectionVerification()
+            return
+        }
+
+        const step = flow.steps[flow.stepIndex]
+        resetConnectionResultState()
+        connectionFlow.optionalStep = !!step.optional
+        processWatchdog.restart()
+        runner.command = step.args
+        runner.running = true
+    }
+
+    function beginConnectionVerification() {
+        const flow = connectionFlow
+        if (!flow) return
+
+        flow.verifyElapsed = 0
+        connectionVerifyTimer.restart()
+        setStatus("Waiting for NetworkManager…", false)
+        pollConnectionState()
+    }
+
+    function parseConnectionStatusLine(line) {
+        const parts = String(line || "").split(":")
+        if (parts.length < 4) return null
+
+        return {
+            device: parts[0].replace(/\\:/g, ":"),
+            type: parts[1],
+            state: parts[2],
+            connection: parts.slice(3).join(":").replace(/\\:/g, ":")
+        }
+    }
+
+    function pollConnectionState() {
+        const flow = connectionFlow
+        if (!flow || !isBusy) return
+        if (connectionProbeBusy) return
+
+        flow.verifyElapsed += connectionVerifyInterval
+        if (flow.verifyElapsed > connectionVerifyTimeout) {
+            finishConnectionFailure("Connection timed out while waiting for NetworkManager")
+            return
+        }
+
+        connectionProbeBusy = true
+        connectionProbe.command = ["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"]
+        connectionProbe.running = true
+    }
+
+    function finishGenericRun(exitCode) {
+        const ok = (exitCode === 0)
+        const successStatus = runnerSuccessStatus
+        const failureStatus = runnerFailureStatus
+
+        runnerMode = ""
+        runnerSuccessStatus = ""
+        runnerFailureStatus = ""
+        isBusy = false
+        processWatchdog.stop()
+
+        if (ok) {
+            if (successStatus.length > 0) setStatus(successStatus, false)
+            refreshStatus()
+            refreshSaved()
+            return
+        }
+
+        errorBox.text = failureStatus.length > 0 ? failureStatus : "Operation failed"
+        errorBox.visible = true
+        setStatus("Operation failed", true)
+        refreshStatus()
+        refreshSaved()
+    }
+
+    function finishConnectionSuccess() {
+        const flow = connectionFlow
+        if (!flow) return
+
+        stopConnectionFlow(true)
+        runner.running = false
+        connectionProbe.running = false
+        setStatus("Connected", false)
+        errorBox.visible = false
+        viewStack.currentIndex = 0
+        statusRefreshDelay.restart()
+    }
+
+    function finishConnectionFailure(message, showPasswordPrompt) {
+        const flow = connectionFlow
+        if (!flow) return
+
+        processWatchdog.stop()
+        connectionVerifyTimer.stop()
+        connectionProbeBusy = false
+        isBusy = false
+        runner.running = false
+        connectionProbe.running = false
+
+        if (showPasswordPrompt) {
+            errorBox.visible = false
+            setStatus(message, true)
+            viewStack.currentIndex = 1
+            Qt.callLater(() => {
+                if (targetIsEnterprise) userField.forceActiveFocus()
+                else passField.forceActiveFocus()
+            })
+        } else {
+            errorBox.text = message
+            errorBox.visible = true
+            setStatus("Connection failed", true)
+            refreshStatus()
+            refreshSaved()
+        }
+
+        connectionFlow = null
+        connectionCommandOutputReady = false
+        connectionCommandExited = false
+        connectionCommandExitCode = -1
+        connectionCommandOutput = ""
+        connectionProbeBusy = false
+    }
+
+    function classifyConnectionFailure(out, exitCode) {
+        const text = String(out || "")
+        if (connectionOutputSuggestsPasswordPrompt(text)) {
+            return { kind: "password", message: "Password required" }
+        }
+        if (connectionOutputSuggestsTimeout(text)) {
+            return { kind: "timeout", message: "Connection timed out while waiting for NetworkManager" }
+        }
+        if (connectionOutputSuggestsMissingProfile(text)) {
+            return { kind: "missing", message: "Saved profile not found" }
+        }
+        if (exitCode === 0) {
+            return { kind: "unknown", message: "Connection completed but the state could not be verified yet" }
+        }
+        return { kind: "failure", message: text.trim().length ? text.trim().split(/\r?\n/).slice(-10).join("\n") : "Connection failed. Check credentials and try again." }
+    }
+
+    function maybeAdvanceConnectionFlow() {
+        const flow = connectionFlow
+        if (!flow) return
+        if (!connectionCommandExited || !connectionCommandOutputReady) return
+
+        const output = String(connectionCommandOutput || "")
+        const exitCode = connectionCommandExitCode
+        const step = flow.steps[flow.stepIndex] || {}
+
+        if (exitCode === 0) {
+            flow.stepIndex += 1
+            if (flow.stepIndex < flow.steps.length) {
+                runCurrentConnectionStep()
+            } else {
+                beginConnectionVerification()
+            }
+            return
+        }
+
+        if (connectionOutputSuggestsPasswordPrompt(output)) {
+            finishConnectionFailure(targetIsEnterprise ? "Username or password required" : "Password required", true)
+            return
+        }
+
+        if (connectionOutputSuggestsTimeout(output)) {
+            beginConnectionVerification()
+            return
+        }
+
+        if (step.optional && connectionOutputSuggestsMissingProfile(output)) {
+            flow.stepIndex += 1
+            runCurrentConnectionStep()
+            return
+        }
+
+        const failure = classifyConnectionFailure(output, exitCode)
+        if (failure.kind === "failure" || failure.kind === "missing" || failure.kind === "unknown") {
+            failure.message = connectionOutputToMessage(output, failure.message)
+        }
+        finishConnectionFailure(failure.message, false)
+    }
+
+    function cancelConnectionFlow() {
+        stopConnectionFlow(false)
+        isBusy = false
+        runner.running = false
+        connectionProbe.running = false
+        connectionProbeBusy = false
+        connectionFlow = null
+    }
+
+    function connectionProbeFinished(raw) {
+        const flow = connectionFlow
+        if (!flow || !isBusy) return
+
+        const lines = String(raw || "").split(/\r?\n/)
+        let wifiState = ""
+        let wifiConnection = ""
+
+        for (let line of lines) {
+            const parsed = parseConnectionStatusLine(line.trim())
+            if (!parsed || parsed.type !== "wifi") continue
+            wifiState = parsed.state
+            wifiConnection = parsed.connection
+            if (wifiState === "connected") break
+        }
+
+        connectionProbeBusy = false
+
+        if (wifiState === "connected" && wifiConnection !== "" && wifiConnection !== "--") {
+            finishConnectionSuccess()
+            return
+        }
+
+        if (wifiState === "need-auth") {
+            finishConnectionFailure("Authentication failed. Check the password and try again.", true)
+            return
+        }
     }
 
     // Combined Status Process
@@ -382,24 +718,33 @@ PanelWindow {
     }
 
     Process {
-    id: procSaved
-    command: ["bash", "-c", `
+        id: procSaved
+        command: ["bash", "-c", `
         nmcli -t -f UUID,TYPE connection show 2>/dev/null \
         | awk -F: '$2=="802-11-wireless"{print $1}' \
         | while IFS= read -r uuid; do
             # nmcli -g prints ONE LINE PER FIELD, so read both lines
-            mapfile -t vals < <(nmcli -g 802-11-wireless.ssid,connection.id connection show uuid "$uuid" 2>/dev/null)
+            mapfile -t vals < <(nmcli -g 802-11-wireless.ssid,connection.id,802-11-wireless-security.key-mgmt,802-1x.eap,802-1x.identity connection show uuid "$uuid" 2>/dev/null)
 
             ssid="\${vals[0]}"
             name="\${vals[1]}"
+            keymgmt="\${vals[2]}"
+            eap="\${vals[3]}"
+            identity="\${vals[4]}"
 
             # fallbacks for weird/empty profiles
             [ -z "$name" ] && name="$ssid"
             [ -z "$ssid" ] && ssid="$name"
             [ -z "$ssid" ] && continue
 
-            # Emit tab-separated: uuid<TAB>ssid<TAB>name
-            printf '%s\\t%s\\t%s\\n' "$uuid" "$ssid" "$name"
+            is_enterprise=0
+            case "$keymgmt" in
+                *wpa-eap*|*WPA-EAP*) is_enterprise=1 ;;
+            esac
+            [ -n "$eap" ] && is_enterprise=1
+
+            # Emit tab-separated: uuid<TAB>ssid<TAB>name<TAB>enterprise<TAB>eap<TAB>identity
+            printf '%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' "$uuid" "$ssid" "$name" "$is_enterprise" "$eap" "$identity"
         done
     `]
     stdout: StdioCollector {
@@ -417,14 +762,17 @@ PanelWindow {
                 const uuid = parts[0].trim()
                 const ssid = parts[1].trim()
                 const name = parts[2].trim()
+                const isEnterprise = (parts[3] || "0").trim() === "1"
+                const eap = (parts[4] || "").trim()
+                const identity = (parts[5] || "").trim()
 
                 if (!uuid || !ssid) continue
 
                 if (savedBySsid[ssid] === undefined) {
-                    savedModel.append({ ssid, name, uuid })
-                    savedBySsid[ssid] = { uuid, name }
+                    savedModel.append({ ssid, name, uuid, isEnterprise, eap, identity })
+                    savedBySsid[ssid] = { uuid, name, isEnterprise, eap, identity }
                 }
-                savedByUuid[uuid] = { ssid, name }
+                savedByUuid[uuid] = { ssid, name, isEnterprise, eap, identity }
             }
 
             markSavedFlags()
@@ -510,7 +858,7 @@ PanelWindow {
     // Scanner
     Process {
         id: scanner
-        command: ["bash", "-c", "nmcli -g BSSID,SSID,SECURITY,SIGNAL dev wifi list --rescan yes 2>/dev/null"]
+        command: ["nmcli", "-g", "BSSID,SSID,SECURITY,SIGNAL", "dev", "wifi", "list", "--rescan", "yes"]
         stdout: StdioCollector {
             onStreamFinished: {
                 scanRunning = false
@@ -552,46 +900,50 @@ PanelWindow {
         id: runner
         stdout: StdioCollector {
             onStreamFinished: {
-                isBusy = false
-                processWatchdog.stop()
-                const out = String(text || "")
-                const ok = out.includes("__EXIT:0")
-
-                if (ok) {
-                    setStatus("Connected", false)
-                    errorBox.visible = false
-                    viewStack.currentIndex = 0
-                    statusRefreshDelay.restart()
-                    return
+                if (runnerMode === "connection") {
+                    connectionCommandOutput = String(text || "")
+                    connectionCommandOutputReady = true
+                    maybeAdvanceConnectionFlow()
                 }
+            }
+        }
+        onExited: (exitCode) => {
+            if (runnerMode === "connection") {
+                connectionCommandExitCode = exitCode
+                connectionCommandExited = true
+                maybeAdvanceConnectionFlow()
+            } else if (runnerMode === "generic") {
+                finishGenericRun(exitCode)
+            }
+        }
+    }
 
-                if (out.includes("Secrets were required") || out.includes("No suitable secrets")) {
-                    errorBox.visible = false
-                    setStatus("Password required", true)
-                    targetSsid = pendingSavedSsid
-                    viewStack.currentIndex = 1
-                    Qt.callLater(() => {
-                        if (targetIsEnterprise) userField.forceActiveFocus()
-                        else passField.forceActiveFocus()
-                    })
-                    return
-                }
+    Process {
+        id: forgetProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // no stdout needed; we only care about the exit status
+            }
+        }
+        onExited: (exitCode) => {
+            const ok = (exitCode === 0)
+            forgetTargetUuid = ""
+            isBusy = false
+            setStatus(ok ? "Network forgotten" : "Failed to forget network", !ok)
+            refreshSaved()
+            refreshStatus()
+        }
+    }
 
-                const lines = out.trim().split(/\r?\n/)
-                const tail = lines.slice(Math.max(0, lines.length - 10)).join("\n")
-                errorBox.text = tail.length ? tail : "Connection failed. Check credentials and try again."
-                errorBox.visible = true
-                setStatus("Connection failed", true)
-                refreshStatus()
-                refreshSaved()
+    Process {
+        id: connectionProbe
+        stdout: StdioCollector {
+            onStreamFinished: {
+                connectionProbeFinished(text || "")
             }
         }
         onExited: {
-            if (exitCode !== 0 && isBusy) {
-                isBusy = false
-                processWatchdog.stop()
-                setStatus("Connection failed", true)
-            }
+            connectionProbeBusy = false
         }
     }
 
@@ -605,35 +957,67 @@ PanelWindow {
         }
     }
 
-    function runWithExit(cmdString) {
+    function runWithExit(cmdString, successStatus, failureStatus) {
         if (isBusy) return
         isBusy = true
+        runnerMode = "generic"
+        runnerSuccessStatus = successStatus || ""
+        runnerFailureStatus = failureStatus || ""
         processWatchdog.restart()
         errorBox.visible = false
         setStatus("Working…", false)
-        runner.command = ["bash", "-c", cmdString + " 2>&1; rc=$?; echo __EXIT:$rc"]
+        runner.command = cmdString
         runner.running = true
     }
 
     function connectSaved(uuid, ssid) {
-        pendingSavedUuid = uuid
-        pendingSavedSsid = ssid
-        
         if (!uuid || uuid === "") {
             setStatus("Invalid connection", true)
             return
         }
-        
-        runWithExit("nmcli -w 15 connection up uuid " + shellQuote(uuid))
+
+        const saved = savedByUuid[uuid] || {}
+        const isEnterprise = !!saved.isEnterprise
+        startConnectionFlow([
+            connectionStep(["nmcli", "-w", "15", "connection", "up", "uuid", uuid], false)
+            ], ssid, uuid, isEnterprise)
+    }
+
+    function forgetSaved(uuid, ssid) {
+        if (isBusy) return
+        if (!uuid || uuid === "") {
+            setStatus("Invalid connection", true)
+            return
+        }
+
+        pendingSavedUuid = uuid
+        pendingSavedSsid = ssid || ""
+        forgetTargetUuid = uuid
+        isBusy = true
+        setStatus("Forgetting…", false)
+        forgetProc.command = ["nmcli", "connection", "delete", "uuid", uuid]
+        forgetProc.running = true
     }
 
     function setSavedPskAndConnect(uuid, password) {
-        runWithExit(
-            "nmcli connection modify uuid " + shellQuote(uuid) +
-            " 802-11-wireless-security.key-mgmt wpa-psk " +
-            " 802-11-wireless-security.psk " + shellQuote(password) + " && " +
-            "nmcli -w 15 connection up uuid " + shellQuote(uuid)
-        )
+        const saved = savedByUuid[uuid] || { ssid: pendingSavedSsid }
+        startConnectionFlow([
+            connectionStep(["nmcli", "connection", "modify", "uuid", uuid, "802-11-wireless-security.key-mgmt", "wpa-psk", "802-11-wireless-security.psk", password], false),
+            connectionStep(["nmcli", "-w", "15", "connection", "up", "uuid", uuid], false)
+        ], saved.ssid || pendingSavedSsid || "", uuid, false)
+    }
+
+    function setSavedEnterpriseAndConnect(uuid, username, password) {
+        const saved = savedByUuid[uuid] || { ssid: pendingSavedSsid }
+        const steps = []
+        if (username && username.trim().length > 0) {
+            steps.push(connectionStep(["nmcli", "connection", "modify", "uuid", uuid, "802-1x.identity", username], false))
+        }
+        if (password && password.trim().length > 0) {
+            steps.push(connectionStep(["nmcli", "connection", "modify", "uuid", uuid, "802-1x.password", password], false))
+        }
+        steps.push(connectionStep(["nmcli", "-w", "25", "connection", "up", "uuid", uuid], false))
+        startConnectionFlow(steps, saved.ssid || pendingSavedSsid || "", uuid, true)
     }
 
     function connectNew(ssid, password, username, isEnterprise) {
@@ -643,36 +1027,33 @@ PanelWindow {
             return
         }
 
-        let cmd = ""
         if (isEnterprise) {
-            // "dev wifi connect" cannot take 802-1x.* props, so build the profile explicitly
-            // and put the secret in 802-1x.password (not the wpa-psk password field).
-            // drop any stale/half-made profile first so retries don't hit a name clash
-            cmd =
-                "nmcli connection delete id " + shellQuote(ssid) + " 2>/dev/null; " +
-                "nmcli connection add type wifi con-name " + shellQuote(ssid) +
-                " ifname '*' ssid " + shellQuote(ssid) +
-                " wifi-sec.key-mgmt wpa-eap" +
-                " 802-1x.eap peap" +
-                " 802-1x.phase2-auth mschapv2" +
-                " 802-1x.identity " + shellQuote(username) +
-                " 802-1x.password " + shellQuote(password) +
-                " && nmcli -w 25 connection up id " + shellQuote(ssid)
+            // "dev wifi connect" cannot take 802-1x.* props, so build the profile explicitly.
+            // Drop any stale/half-made profile first so retries don't hit a name clash.
+            startConnectionFlow([
+                connectionStep(["nmcli", "connection", "delete", "id", ssid], true),
+                connectionStep(["nmcli", "connection", "add", "type", "wifi", "con-name", ssid, "ifname", "*", "ssid", ssid, "wifi-sec.key-mgmt", "wpa-eap", "802-1x.eap", "peap", "802-1x.phase2-auth", "mschapv2", "802-1x.identity", username, "802-1x.password", password], false),
+                connectionStep(["nmcli", "-w", "25", "connection", "up", "id", ssid], false)
+            ], ssid, "", true)
         } else {
-            cmd = "nmcli -w 20 dev wifi connect " + shellQuote(ssid)
-            if (password && password.trim().length > 0)
-                cmd += " password " + shellQuote(password)
+            const args = ["nmcli", "-w", "20", "dev", "wifi", "connect", ssid]
+            if (password && password.trim().length > 0) {
+                args.push("password", password)
+            }
+            startConnectionFlow([
+                connectionStep(args, false)
+            ], ssid, "", false)
         }
-
-        pendingSavedUuid = ""
-        pendingSavedSsid = ssid
-
-        runWithExit(cmd)
     }
 
     function toggleWifi() {
         if (isBusy) return
-        runWithExit("nmcli radio wifi " + (wifiEnabled ? "off" : "on"))
+        const turningOff = wifiEnabled
+        runWithExit(
+            ["nmcli", "radio", "wifi", turningOff ? "off" : "on"],
+            turningOff ? "WiFi disabled" : "WiFi enabled",
+            "Failed to update WiFi state"
+        )
     }
 
     function disconnectNetwork() {
@@ -681,7 +1062,7 @@ PanelWindow {
             setStatus("No active connection", true)
             return
         }
-        runWithExit("nmcli connection down uuid " + shellQuote(activeConnectionUuid))
+        runWithExit(["nmcli", "connection", "down", "uuid", activeConnectionUuid], "Disconnected", "Failed to disconnect")
     }
 
     function startScanToggle() {
@@ -1080,7 +1461,8 @@ PanelWindow {
                             onTextChanged: enteredPass = text
                             onAccepted: {
                                 // enterprise needs the full 802-1x profile, never the psk-only path
-                                if (pendingSavedUuid !== "" && !targetIsEnterprise) setSavedPskAndConnect(pendingSavedUuid, enteredPass)
+                                if (pendingSavedUuid !== "" && targetIsEnterprise) setSavedEnterpriseAndConnect(pendingSavedUuid, enteredUser, enteredPass)
+                                else if (pendingSavedUuid !== "" && !targetIsEnterprise) setSavedPskAndConnect(pendingSavedUuid, enteredPass)
                                 else connectNew(targetSsid, enteredPass, enteredUser, targetIsEnterprise)
                             }
                         }
@@ -1110,7 +1492,8 @@ PanelWindow {
                                 disabled: isBusy
                                 onClicked: {
                                     // enterprise needs the full 802-1x profile, never the psk-only path
-                                    if (pendingSavedUuid !== "" && !targetIsEnterprise) setSavedPskAndConnect(pendingSavedUuid, enteredPass)
+                                    if (pendingSavedUuid !== "" && targetIsEnterprise) setSavedEnterpriseAndConnect(pendingSavedUuid, enteredUser, enteredPass)
+                                    else if (pendingSavedUuid !== "" && !targetIsEnterprise) setSavedPskAndConnect(pendingSavedUuid, enteredPass)
                                     else connectNew(targetSsid, enteredPass, enteredUser, targetIsEnterprise)
                                 }
                             }
@@ -1140,7 +1523,7 @@ PanelWindow {
             required property string name
             
             width: ListView.view ? ListView.view.width : 0
-            height: 35
+            height: 40
             radius: 12
             color: sm.containsMouse ? Qt.rgba(cBlue.r, cBlue.g, cBlue.b, 0.10) : "transparent"
             border.width: sm.containsMouse ? 1 : 0
@@ -1162,6 +1545,32 @@ PanelWindow {
                     elide: Text.ElideRight
                 }
                 Label { text: "Saved"; font.family: fontText; font.pixelSize: 10; color: cMuted }
+                Rectangle {
+                    width: 26
+                    height: 26
+                    radius: 9
+                    color: forgetMouse.containsMouse ? Qt.rgba(cRed.r, cRed.g, cRed.b, 0.12) : "transparent"
+                    border.width: forgetMouse.containsMouse ? 1 : 0
+                    border.color: Qt.rgba(cRed.r, cRed.g, cRed.b, 0.28)
+                    z: 1
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: "󰅙"
+                        font.family: fontIcon
+                        font.pixelSize: 12
+                        color: cRed
+                    }
+
+                    MouseArea {
+                        id: forgetMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: isBusy ? Qt.ArrowCursor : Qt.PointingHandCursor
+                        enabled: !isBusy
+                        onClicked: forgetSaved(parent.parent.uuid, parent.parent.ssid)
+                    }
+                }
             }
 
             MouseArea {
@@ -1170,6 +1579,7 @@ PanelWindow {
                 hoverEnabled: true
                 cursorShape: isBusy ? Qt.ArrowCursor : Qt.PointingHandCursor
                 enabled: !isBusy
+                z: 0
                 onClicked: connectSaved(parent.uuid, parent.ssid)
             }
         }
