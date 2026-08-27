@@ -364,6 +364,13 @@ PanelWindow {
     }
 
     Lib.CommandPoll {
+        id: wifiNetwork
+        interval: 5000
+        command: Lib.Shell.sh("bash ~/.config/quickshell/bin/qs_network_name.sh")
+        parse: function(o) { return String(o ?? "").trim() }
+    }
+
+    Lib.CommandPoll {
         id: storagePoll
         interval: 12000
         command: Lib.Shell.sh("df -P \"$HOME\" 2>/dev/null | awk 'NR==2 {print int($3*100/$2)}'")
@@ -828,6 +835,45 @@ PanelWindow {
                         property int pressedId: 0
                         property var pressedItem: (pressedId > 0) ? wsRepeater.itemAt(pressedId - 1) : null
 
+                        function workspaceAt(localX) {
+                            const items = []
+                            for (let i = 0; i < wsRepeater.count; i++) {
+                                const item = wsRepeater.itemAt(i)
+                                if (item) items.push(item)
+                            }
+                            if (items.length === 0) return null
+
+                            let best = null
+                            let bestDistance = Infinity
+                            for (const item of items) {
+                                const left = wsRow.x + item.x
+                                const right = left + item.width
+                                if (localX >= left && localX <= right) {
+                                    return item
+                                }
+                                const center = left + (item.width / 2)
+                                const distance = Math.abs(localX - center)
+                                if (distance < bestDistance) {
+                                    bestDistance = distance
+                                    best = item
+                                }
+                            }
+
+                            return best
+                        }
+
+                        function updateHover(localX) {
+                            const item = workspaceAt(localX)
+                            hoveredId = item ? item.wsId : 0
+                        }
+
+                        function activateWorkspaceAt(localX) {
+                            const item = workspaceAt(localX)
+                            if (!item) return false
+                            Lib.Shell.det("hyprctl dispatch workspace " + item.wsId)
+                            return true
+                        }
+
                         Rectangle {
                             id: activePill
                             property int currentId: taskbar.activeWsId
@@ -911,16 +957,8 @@ PanelWindow {
                                     width: hasWindows ? (winCount * 22 + 12) : 26
                                     height: 34
 
-                                    HoverHandler {
-                                        id: wsHover
-                                        onHoveredChanged: {
-                                            if (hovered) wsContainer.hoveredId = wsId
-                                            else if (wsContainer.hoveredId === wsId) wsContainer.hoveredId = 0
-                                        }
-                                    }
-
-                                    y: wsPress.pressed ? 1 : ((!isActive && wsHover.hovered) ? -2 : 0)
-                                    scale: (wsPress.pressed ? 0.96 : 1.0) * ((!isActive && wsHover.hovered) ? 1.10 : 1.0)
+                                    y: wsContainer.pressedId === wsId ? 1 : ((!isActive && wsContainer.hoveredId === wsId) ? -2 : 0)
+                                    scale: (wsContainer.pressedId === wsId ? 0.96 : 1.0) * ((!isActive && wsContainer.hoveredId === wsId) ? 1.10 : 1.0)
                                     Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                                     Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.08 } }
 
@@ -933,7 +971,7 @@ PanelWindow {
                                         lineHeight: 0.8
                                         verticalAlignment: Text.AlignVCenter
                                         Behavior on color { ColorAnimation { duration: 140 } }
-                                        color: isActive ? "#2d353b" : (wsHover.hovered ? (taskbar.isDarkMode ? "#f2f2f2" : "#2d353b") : (taskbar.isDarkMode ? "#d5c9b2" : "#5c6a72"))
+                                        color: isActive ? "#2d353b" : (wsContainer.hoveredId === wsId ? (taskbar.isDarkMode ? "#f2f2f2" : "#2d353b") : (taskbar.isDarkMode ? "#d5c9b2" : "#5c6a72"))
                                     }
 
                                     Row {
@@ -980,27 +1018,42 @@ PanelWindow {
                                                     layer.smooth: true
                                                     layer.mipmap: true
                                                     Behavior on color { enabled: !modelData.urgent; ColorAnimation { duration: 140 } }
-                                                    scale: (wsDelegate.isActive && wsHover.hovered) ? 1.25 : 1.0
+                                                    scale: (wsDelegate.isActive && wsContainer.hoveredId === wsId) ? 1.25 : 1.0
                                                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
                                                     color: wsDelegate.isActive ? '#2b3033' :
                                                            (modelData.urgent ? flashColor.val :
-                                                           (wsHover.hovered ? (taskbar.isDarkMode ? "#f2f2f2" : "#2d353b") :
+                                                           (wsContainer.hoveredId === wsId ? (taskbar.isDarkMode ? "#f2f2f2" : "#2d353b") :
                                                            (taskbar.isDarkMode ? "#d5c9b2" : "#1e2326")))
                                                 }
                                             }
                                         }
                                     }
-                                    
-                                    MouseArea {
-                                        id: wsPress
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        onPressed: wsContainer.pressedId = wsId
-                                        onReleased: if (wsContainer.pressedId === wsId) wsContainer.pressedId = 0
-                                        onCanceled: if (wsContainer.pressedId === wsId) wsContainer.pressedId = 0
-                                        onClicked: Lib.Shell.det("hyprctl dispatch workspace " + wsId)
-                                    }
                                 }
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            z: 20
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            propagateComposedEvents: true
+                            onPositionChanged: (mouse) => wsContainer.updateHover(mouse.x)
+                            onExited: wsContainer.hoveredId = 0
+                            onPressed: (mouse) => {
+                                wsContainer.pressedId = wsContainer.workspaceAt(mouse.x)?.wsId ?? 0
+                                mouse.accepted = false
+                            }
+                            onReleased: (mouse) => {
+                                if (wsContainer.pressedId > 0) {
+                                    wsContainer.pressedId = 0
+                                }
+                                mouse.accepted = false
+                            }
+                            onClicked: (mouse) => {
+                                wsContainer.activateWorkspaceAt(mouse.x)
+                                mouse.accepted = true
                             }
                         }
                     }
@@ -1157,6 +1210,9 @@ PanelWindow {
                         Layout.preferredWidth: 66
                         icon: wifiIcon(Number(wifiPercent.value) || 0)
                         text: String(wifiPercent.value ?? 0) + "%"
+                        tooltipText: wifiNetwork.value !== ""
+                            ? wifiNetwork.value
+                            : (Number(wifiPercent.value) > 0 ? "Conectado" : "Sin conexión")
                         bgColor: pal.bg
                         iconColor: (Number(wifiPercent.value) <= 0) ? pal.textSecondary : pal.textPrimary
                         textColor: (Number(wifiPercent.value) <= 0) ? pal.textSecondary : pal.textPrimary
@@ -1532,6 +1588,7 @@ PanelWindow {
         property string icon: ""
         property string text: ""
         property string iconSource: ""
+        property string tooltipText: ""
         property color textColor: "#d5c9b2"
         property color iconColor: root.textColor
         property color bgColor: Qt.rgba(0.23, 0.25, 0.22, 0.25)
@@ -1599,6 +1656,34 @@ PanelWindow {
             anchors.fill: parent
             hoverEnabled: true
             onClicked: (mouse) => root.clicked(mouse)
+        }
+
+        Rectangle {
+            id: tooltip
+            visible: root.tooltipText !== "" && hover.hovered
+            z: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: taskbar.topMode ? (parent.height + 8) : -(height + 8)
+
+            width: tooltipLabel.implicitWidth + 16
+            height: 24
+            radius: 7
+            color: taskbar.isDarkMode ? "#F01a1a1a" : "#F0f5f5f5"
+            opacity: visible ? 1.0 : 0.0
+            scale: visible ? 1.0 : 0.92
+
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutQuart } }
+            Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack; easing.overshoot: 1.08 } }
+
+            Text {
+                id: tooltipLabel
+                anchors.centerIn: parent
+                text: root.tooltipText
+                color: pal.textPrimary
+                font.pixelSize: 9
+                font.weight: Font.Medium
+                elide: Text.ElideRight
+            }
         }
     }
 }

@@ -2,6 +2,8 @@
 
 Mis configuraciones personales de Hyprland y el ecosistema Wayland. Guardadas acá para no perderlas y poder levantarlas fácil en cualquier PC.
 
+Tome de inspiración parte de la base creada con Quickshell de *snes19xx*, del repo `https://github.com/snes19xx/surface-dots`.
+
 ## Contenido
 
 ```text

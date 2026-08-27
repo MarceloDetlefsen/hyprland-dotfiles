@@ -44,7 +44,7 @@ Lib.Card {
 
 
 
-  property var pollCommand: Lib.Shell.sh("dunstctl history 2>/dev/null || true")
+  property var pollCommand: Lib.Shell.sh("makoctl list -j 2>/dev/null | jq -c '.[]?' 2>/dev/null; printf '\\n'; makoctl history -j 2>/dev/null | jq -c '.[]?' 2>/dev/null || true")
 
   property var pendingItems: null
   property bool hasPending: false
@@ -69,7 +69,7 @@ Lib.Card {
         if (!(root.active && root.visible)) return
 
         var raw = this.text ?? ""
-        var items = root.parseDunstToItems(raw)
+        var items = root.parseMakoToItems(raw)
 
         if (list.moving || list.flicking) {
           pendingItems = items
@@ -82,33 +82,41 @@ Lib.Card {
     }
   }
 
-  // Refresh only when the hub opens. dunst stays the daemon, so there's nothing
-  // to gain from background polling.
-  //
-  // Trigger off `active` (bound to the hub window's visibility)
-  onActiveChanged: { if (active) proc.exec(root.pollCommand) }
-  onVisibleChanged: { if (visible && active) proc.exec(root.pollCommand) }
+  Timer {
+    interval: 1800
+    repeat: true
+    running: root.active && root.visible
+    triggeredOnStart: true
+    onTriggered: proc.exec(root.pollCommand)
+  }
 
-  function parseDunstToItems(raw) {
+  function extractValue(v) {
+    if (v && typeof v === "object" && v.data !== undefined) return v.data
+    return v
+  }
+
+  function parseMakoToItems(raw) {
     if (!raw || raw.trim() === "") return []
     var incoming = []
     try {
-      var parsed = JSON.parse(raw)
-      var notifs = (parsed.data && parsed.data.length > 0) ? parsed.data[0] : []
-      
-      for (var i = 0; i < notifs.length && incoming.length < 50; i++) {
-        var n = notifs[i]
-        var id = (n.id && n.id.data !== undefined) ? Number(n.id.data) : 0
-        var app = (n.appname && n.appname.data) ? String(n.appname.data) : "SYSTEM"
-        var summary = (n.summary && n.summary.data) ? String(n.summary.data) : "Notification"
-        var body = (n.body && n.body.data) ? String(n.body.data) : ""
+      var lines = String(raw).split(/\r?\n/)
+      for (var li = 0; li < lines.length && incoming.length < 50; li++) {
+        var line = lines[li].trim()
+        if (!line) continue
+        var n = JSON.parse(line)
+        if (!n || Array.isArray(n)) continue
+        var id = Number(extractValue(n.id)) || 0
+        var app = String(extractValue(n.app_name ?? n["app-name"] ?? n.appname) || "SYSTEM")
+        var summary = String(extractValue(n.summary) || "Notification")
+        var body = String(extractValue(n.body) || "")
 
-        if (!root.dismissed[id]) {
+        if (!root.dismissed[id] && !incoming.some((it) => it.nId === id)) {
           incoming.push({ nId: id, app: app, summary: summary, body: body })
         }
+        if (incoming.length >= 50) break
       }
     } catch(e) {
-      console.log("Dunst history parse error: " + e)
+      console.log("Mako history parse error: " + e)
     }
     return incoming
   }
@@ -139,7 +147,7 @@ Lib.Card {
   function dismissOne(index, id) {
     root.dismissed[id] = true
     notifModel.remove(index)
-    Lib.Shell.det("dunstctl close " + id + " >/dev/null 2>&1; dunstctl history-rm " + id + " >/dev/null 2>&1 || true")
+    Lib.Shell.det("makoctl dismiss -n " + id + " >/dev/null 2>&1 || true")
   }
 
   function triggerClearAll() {
@@ -159,7 +167,7 @@ Lib.Card {
           root.dismissed[notifModel.get(i).nId] = true
           notifModel.remove(i)
         }
-        Lib.Shell.det("dunstctl close-all >/dev/null 2>&1; dunstctl history-clear >/dev/null 2>&1 || true")
+        Lib.Shell.det("makoctl dismiss --all >/dev/null 2>&1 || true")
       }
     }
     PropertyAction { target: list; property: "opacity"; value: 1 }
