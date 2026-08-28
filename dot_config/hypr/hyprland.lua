@@ -96,7 +96,7 @@ end)
 -- HYPRLAND ECOSYSTEM
 hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpaper")
-    hl.exec_cmd("swayidle -w before-sleep '~/.config/hypr/scripts/lock-session.sh' timeout 600 '~/.config/hypr/scripts/lock-session.sh' timeout 900 '~/.config/hypr/scripts/suspend-deep.sh'")
+    hl.exec_cmd("hypridle")
 end)
 
 -- CUSTOM
@@ -160,6 +160,13 @@ hl.config({
         },
         layout = "dwindle",
     },
+})
+
+hl.window_rule({
+    match = {
+        fullscreen = true,
+    },
+    idle_inhibit = "fullscreen",
 })
 
 -- ------- QUITAR FONDO OG ------
@@ -299,6 +306,7 @@ hl.bind(var_mod .. " + Q", hl.dsp.window.close())
 hl.bind(var_mod .. " + F", hl.dsp.window.fullscreen())
 hl.bind(var_mod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
 hl.bind(var_mod .. " + R", hl.dsp.exec_cmd("~/.config/hypr/scripts/random-wallpaper.sh"))
+hl.bind(var_mod .. " + B", hl.dsp.exec_cmd("~/.config/waybar/scripts/power-menu.sh"))
 hl.bind(var_mod .. " + SHIFT + Q", hl.dsp.exit())
 hl.bind("ALT + F4", hl.dsp.exec_cmd("hyprctl layers | grep -q power-menu || quickshell -p ~/.config/quickshell/utils/PowerMenu.qml"))
 hl.bind(var_mod .. " + E", hl.dsp.exec_cmd("dolphin"))
