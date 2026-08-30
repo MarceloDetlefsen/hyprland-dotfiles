@@ -117,6 +117,11 @@ ShellRoot {
                 screen: v.modelData
             }
 
+            Desktop.PresentationCursor {
+                theme: screenTheme
+                screen: v.modelData
+            }
+
             Dock.Drawer {
                 id: appDrawer
                 isDarkMode: screenTheme.isDarkMode

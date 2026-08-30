@@ -169,6 +169,13 @@ hl.window_rule({
     idle_inhibit = "fullscreen",
 })
 
+hl.window_rule({
+    match = {
+        class = "^(HyprMagnifier)$",
+    },
+    fullscreen = true,
+})
+
 -- ------- QUITAR FONDO OG ------
 hl.config({
     misc = {
@@ -283,6 +290,8 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightn
 hl.bind(var_mod .. " + P", hl.dsp.exec_cmd("hyprshot -m output -c"))
 hl.bind(var_mod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region -c"))
 hl.bind(var_mod .. " + CTRL + P", hl.dsp.exec_cmd("hyprshot -m output -o ~/Imágenes"))
+hl.bind(var_mod .. " + M", hl.dsp.exec_cmd("~/.config/hypr/scripts/magnifier.sh"))
+hl.bind(var_mod .. " + T", hl.dsp.exec_cmd("~/.config/hypr/scripts/presentation-cursor.sh toggle"))
 
 -- ---------- CLIPHIST -----------
 hl.bind(var_mod .. " + V", hl.dsp.exec_cmd("sh -c \"cliphist list | wofi --dmenu | cliphist decode | wl-copy\""))
