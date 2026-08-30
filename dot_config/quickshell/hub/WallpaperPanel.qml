@@ -30,6 +30,7 @@ Item {
     property var    palette:          []
     property bool   showToast:        false
     property string toastText:        ""
+    readonly property string wallpaperDir: Quickshell.env("HOME") + "/wallpapers"
 
     function triggerToast(msg) {
         root.toastText = msg
@@ -65,7 +66,7 @@ Item {
         wallpaperModel.clear()
         Quickshell.execDetached(["bash", "-c",
             "pkill -fx '" + root.papelBin + "' 2>/dev/null; sleep 0.1; " +
-            "'" + root.papelBin + "' &"])
+            "PAPEL_DIR='" + root.wallpaperDir + "' '" + root.papelBin + "' &"])
         connectTimer.restart()
     }
 
@@ -238,7 +239,7 @@ Item {
                 RowLayout {
                     spacing: 6
                     Text {
-                        text: "~/Pictures/Wallpapers/"
+                        text: root.wallpaperDir + "/"
                         color: root.rAccent; font.family: "DM Mono"; font.pixelSize: 11
                     }
                 }

@@ -166,6 +166,15 @@ ShellRoot {
                 }
             }
 
+            GlobalShortcut {
+                name: "wallpaperPicker"
+                description: "Open wallpaper picker"
+                onPressed: {
+                    hubWindow.showWallpapers()
+                    if (!hubWindow.visible) hubWindow.visible = true
+                }
+            }
+
             // Picker if an unconfigured screen is waiting, otherwise the hub panel
             GlobalShortcut {
                 name: "monitorPicker"

@@ -24,6 +24,12 @@ PanelWindow {
             win.monitorsMode = true
         }
 
+        function showWallpapers() {
+            win.settingsPanelOpen = false
+            win.monitorsMode = false
+            win.wallpaperMode = true
+        }
+
         function closeAll() {
             win.settingsPanelOpen = false
             win.wallpaperMode = false

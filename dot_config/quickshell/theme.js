@@ -1,29 +1,29 @@
 .pragma library
 
-var bgMain  = "#141218"
-var bgPanel = "rgba(54, 52, 58, 0.88)"
-var bgCard  = "#211f24"
-var bgItem  = "#1d1b20"
-var bgItemHover = "#2b292f"
+var bgMain  = "#0f1417"
+var bgPanel = "rgba(49, 53, 57, 0.88)"
+var bgCard  = "#1b2023"
+var bgItem  = "#171c1f"
+var bgItemHover = "#262b2e"
 
-var fgMain  = "#e7e0e8"
-var fgMuted = "#cbc4cf"
-var fgOnAccent = "#37265c"
+var fgMain  = "#dfe3e7"
+var fgMuted = "#c0c7cd"
+var fgOnAccent = "#003548"
 
-var accent = "#d1bcfd"
-var accentBlue = "#ccc2db"
+var accent = "#8ecff2"
+var accentBlue = "#b5c9d7"
 var accentRed  = "#ffb4ab"
-var accentSlider = "#f0b8c6"
-var accentSlider2 = "#4e3d75"
+var accentSlider = "#c9c2ea"
+var accentSlider2 = "#004d67"
 
-var border = "rgba(148, 143, 153, 0.8)"
-var outline = "rgba(148, 143, 153, 0.2)"
-var subtleFill = "rgba(231, 224, 232, 0.05)"
-var subtleFillHover = "rgba(231, 224, 232, 0.15)"
-var hoverSpotlight = "rgba(231, 224, 232, 0.14)"
+var border = "rgba(138, 146, 151, 0.8)"
+var outline = "rgba(138, 146, 151, 0.2)"
+var subtleFill = "rgba(223, 227, 231, 0.05)"
+var subtleFillHover = "rgba(223, 227, 231, 0.15)"
+var hoverSpotlight = "rgba(223, 227, 231, 0.14)"
 
-var weatherd = "#cbc4cf"
-var weatherl = "#49454e"
+var weatherd = "#c0c7cd"
+var weatherl = "#40484d"
 var weatherColor = weatherd
 
 // Sizing
