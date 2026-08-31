@@ -1,10 +1,7 @@
-@define-color bg    #17272f;
-@define-color bg1   
-#3c444a;
-@define-color fg    
-#d5c9b2;
-@define-color blue  
-#7aa2f7;
+@define-color bg #202018;
+@define-color bg1 #35352c;
+@define-color fg #e5e3d6;
+@define-color blue #c8cc78;
 * {
   border: none;
   border-radius: 0;
@@ -14,7 +11,7 @@
 }
 window#waybar {
   background-color: @bg;
-  border-top: 3px solid #5d666d;
+  border-top: 3px solid #929182;
   color: @fg;
 }
 #cpu,
@@ -31,29 +28,29 @@ window#waybar {
 #tray {
   background: @bg;
   color: @fg;
-  border-top: 2px solid #5d666d;
-  border-left: 2px solid #5d666d;
-  border-right: 2px solid #1a1e21;
-  border-bottom: 2px solid #1a1e21;
+  border-top: 2px solid #929182;
+  border-left: 2px solid #929182;
+  border-right: 2px solid #35352c;
+  border-bottom: 2px solid #35352c;
   margin: 4px 2px;
   padding: 0 10px;
 }
 #cpu,
 #memory {
   color: @blue;
-  background: #252c31;
-  border-top: 2px solid #1a1e21;
-  border-left: 2px solid #1a1e21;
-  border-right: 2px solid #5d666d;
-  border-bottom: 2px solid #5d666d;
+  background: #202018;
+  border-top: 2px solid #35352c;
+  border-left: 2px solid #35352c;
+  border-right: 2px solid #929182;
+  border-bottom: 2px solid #929182;
 }
 #workspaces button.active {
   color: @fg;
   background: @bg1;
-  border-top: 2px solid #1a1e21;
-  border-left: 2px solid #1a1e21;
-  border-right: 2px solid #5d666d;
-  border-bottom: 2px solid #5d666d;
+  border-top: 2px solid #35352c;
+  border-left: 2px solid #35352c;
+  border-right: 2px solid #929182;
+  border-bottom: 2px solid #929182;
 }
 /* So that dynamic icons don't squash together */
 #workspaces button label {
@@ -66,5 +63,5 @@ window#waybar {
   padding: 0 6px;
 }
 #custom-launcher {
-  color: #20c93d;
+  color: #c8cc78;
 }

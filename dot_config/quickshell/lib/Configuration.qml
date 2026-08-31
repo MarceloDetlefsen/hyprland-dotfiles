@@ -7,6 +7,8 @@ Scope {
     id: root
     readonly property string configPath:
         Qt.resolvedUrl("usersettings.json").toString().replace("file://", "")
+    readonly property string palettePath:
+        Qt.resolvedUrl("../palette.json").toString().replace("file://", "")
 
     // Bar / Dock
     // Settings from disk a beat after startup;
@@ -35,6 +37,28 @@ Scope {
     property bool   useCustomColors: false
     property color  customAccent:    "#7AA1A6"
     property color  customBg:        "#141719"
+
+    // Live palette from matugen
+    property color  themeBgMain:         "#121318"
+    property color  themeBgCard:         "#1f1f25"
+    property color  themeBgItem:         "#1b1b21"
+    property color  themeBgItemHover:    "#29292f"
+    property color  themeFgMain:         "#e4e1e9"
+    property color  themeFgMuted:        "#c6c5d0"
+    property color  themeFgOnAccent:     "#222c61"
+    property color  themeAccent:         "#bac3ff"
+    property color  themeAccentBlue:     "#c3c5dd"
+    property color  themeAccentRed:      "#ffb4ab"
+    property color  themeAccentSlider:   "#e5bad8"
+    property color  themeAccentSlider2:  "#394379"
+    property color  themeBorder:         "#90909a"
+    property color  themeOutline:        "#90909a"
+    property color  themeSubtleFill:     "#e4e1e9"
+    property color  themeSubtleFillHover: "#e4e1e9"
+    property color  themeHoverSpotlight: "#e4e1e9"
+    property color  themeWeatherd:       "#c6c5d0"
+    property color  themeWeatherl:       "#46464f"
+    property color  themeWeatherColor:   "#c6c5d0"
 
     // Weather
     property string weatherApiKey: ""
@@ -221,7 +245,55 @@ Scope {
         id: configFile
         path: root.configPath
         preload: true
+        watchChanges: true
         onLoaded: { root.load(); root.ready = true; root.writePowerMenuColors() }
+        onTextChanged: root.load()
+        onFileChanged: reload()
         onLoadFailed: root.ready = true
+    }
+
+    function loadPalette() {
+        try {
+            var raw = paletteFile.text()
+            if (!raw || raw.length === 0) return
+            var p = JSON.parse(raw)
+            if (p.background         !== undefined) root.themeBgMain        = p.background
+            if (p.surface            !== undefined) root.themeBgCard        = p.surface
+            if (p.surface_container  !== undefined) root.themeBgItem        = p.surface_container_low || p.surface_container || p.surface
+            if (p.surface_container  !== undefined) root.themeBgItemHover   = p.surface_container_high || p.surface_container_highest || p.surface_container
+            if (p.on_surface         !== undefined) root.themeFgMain        = p.on_surface
+            if (p.on_surface_variant  !== undefined) root.themeFgMuted       = p.on_surface_variant
+            if (p.on_primary         !== undefined) root.themeFgOnAccent    = p.on_primary
+            if (p.accent             !== undefined) root.themeAccent        = p.accent
+            if (p.secondary          !== undefined) root.themeAccentBlue    = p.secondary
+            if (p.error               !== undefined) root.themeAccentRed     = p.error
+            if (p.tertiary           !== undefined) root.themeAccentSlider  = p.tertiary
+            if (p.primary_container   !== undefined) root.themeAccentSlider2 = p.primary_container
+            if (p.outline            !== undefined) {
+                root.themeOutline = p.outline
+                root.themeBorder = Qt.rgba(p.outline.r, p.outline.g, p.outline.b, 0.80)
+            }
+            if (p.on_surface         !== undefined) {
+                root.themeSubtleFill = Qt.rgba(p.on_surface.r, p.on_surface.g, p.on_surface.b, 0.05)
+                root.themeSubtleFillHover = Qt.rgba(p.on_surface.r, p.on_surface.g, p.on_surface.b, 0.15)
+                root.themeHoverSpotlight = Qt.rgba(p.on_surface.r, p.on_surface.g, p.on_surface.b, 0.14)
+            }
+            if (p.on_surface_variant !== undefined) root.themeWeatherd      = p.on_surface_variant
+            if (p.surface_variant    !== undefined) root.themeWeatherl      = p.surface_variant
+            if (p.on_surface_variant !== undefined) root.themeWeatherColor  = p.on_surface_variant
+        } catch(e) {
+            console.warn("[Configuration] palette load failed:", e)
+        }
+    }
+
+    FileView {
+        id: paletteFile
+        path: root.palettePath
+        preload: true
+        watchChanges: true
+        onLoaded: root.loadPalette()
+        onTextChanged: root.loadPalette()
+        onFileChanged: reload()
+        onLoadFailed: root.loadPalette()
     }
 }

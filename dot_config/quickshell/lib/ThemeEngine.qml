@@ -11,32 +11,32 @@ QtObject {
     // Surfaces
     readonly property color bgMain: Configuration.useCustomColors
         ? Configuration.customBg
-        : Theme.bgMain
-    readonly property color bgCard:      Theme.bgCard
-    readonly property color bgItem:      Theme.bgItem
-    readonly property color bgItemHover: Theme.bgItemHover
-    readonly property color bgWidget:    Theme.bgCard
+        : Configuration.themeBgMain
+    readonly property color bgCard:      Configuration.themeBgCard
+    readonly property color bgItem:      Configuration.themeBgItem
+    readonly property color bgItemHover: Configuration.themeBgItemHover
+    readonly property color bgWidget:    Configuration.themeBgCard
 
     // Text
-    readonly property color textPrimary:   Theme.fgMain
-    readonly property color textSecondary: Theme.fgMuted
-    readonly property color textOnAccent:  Theme.fgOnAccent
+    readonly property color textPrimary:   Configuration.themeFgMain
+    readonly property color textSecondary: Configuration.themeFgMuted
+    readonly property color textOnAccent:  Configuration.themeFgOnAccent
 
     // Accents
     readonly property color accent: Configuration.useCustomColors
         ? Configuration.customAccent
-        : Theme.accent
-    readonly property color accentBlue: Theme.accentBlue
-    readonly property color accentRed:   Theme.accentRed
-    readonly property color accentSlider:  Theme.accentSlider
-    readonly property color accentSlider2: Theme.accentSlider2
+        : Configuration.themeAccent
+    readonly property color accentBlue: Configuration.themeAccentBlue
+    readonly property color accentRed:   Configuration.themeAccentRed
+    readonly property color accentSlider:  Configuration.themeAccentSlider
+    readonly property color accentSlider2: Configuration.themeAccentSlider2
 
     // Lines and hovers
-    readonly property color border:          Theme.border
-    readonly property color outline:         Theme.outline
-    readonly property color subtleFill:      Theme.subtleFill
-    readonly property color subtleFillHover: Theme.subtleFillHover
-    readonly property color hoverSpotlight:  Theme.hoverSpotlight
+    readonly property color border:          Configuration.themeBorder
+    readonly property color outline:         Configuration.themeOutline
+    readonly property color subtleFill:      Configuration.themeSubtleFill
+    readonly property color subtleFillHover: Configuration.themeSubtleFillHover
+    readonly property color hoverSpotlight:  Configuration.themeHoverSpotlight
 
     // Sizing
     readonly property int radiusOuter: Theme.radiusOuter
@@ -47,7 +47,7 @@ QtObject {
     readonly property int sliderH:     24
 
     // Used by the top-style calendar card
-    readonly property color weatherColor: Theme.weatherColor
+    readonly property color weatherColor: Configuration.themeWeatherColor
 
     readonly property string textFont: Theme.textFont
     readonly property string iconFont: Theme.iconFont

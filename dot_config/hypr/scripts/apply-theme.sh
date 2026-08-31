@@ -26,7 +26,9 @@ if ! command -v matugen >/dev/null 2>&1; then
     exit 0
 fi
 
-matugen image "$WALLPAPER" -m dark --source-color-index 0
+MATUGEN_ARGS=(image "$WALLPAPER" -m dark --prefer saturation)
+
+matugen "${MATUGEN_ARGS[@]}"
 
 generate_kde_scheme() {
     local kitty_colors="$HOME/.config/kitty/generated/colors.conf"
@@ -187,15 +189,153 @@ notify_kde_palette_change() {
     fi
 }
 
+generate_quickshell_palette() {
+    local palette_tmp="$HOME/.config/quickshell/palette.json"
+    local tmp
+
+    if ! command -v jq >/dev/null 2>&1; then
+        return 0
+    fi
+
+    tmp="$(mktemp)"
+    if ! matugen "${MATUGEN_ARGS[@]}" --dry-run --json hex > "$tmp" 2>/dev/null; then
+        rm -f "$tmp"
+        return 0
+    fi
+
+    jq '{
+        accent: .colors.primary.default.color,
+        background: .colors.background.default.color,
+        surface: .colors.surface.default.color,
+        surface_container: .colors.surface_container.default.color,
+        surface_container_highest: .colors.surface_container_highest.default.color,
+        on_surface: .colors.on_surface.default.color,
+        on_surface_variant: .colors.on_surface_variant.default.color,
+        secondary: .colors.secondary.default.color,
+        tertiary: .colors.tertiary.default.color,
+        error: .colors.error.default.color,
+        outline: .colors.outline.default.color,
+        primary_container: .colors.primary_container.default.color,
+        secondary_container: .colors.secondary_container.default.color,
+        tertiary_container: .colors.tertiary_container.default.color
+    }' "$tmp" > "$palette_tmp"
+    rm -f "$tmp"
+}
+
+generate_waybar_style() {
+    local palette_file="$HOME/.config/quickshell/palette.json"
+    local style_file="$HOME/.config/waybar/style.css"
+    local tmp bg bg1 fg blue border surface_variant item_bg launcher
+
+    [ -f "$palette_file" ] || return 0
+    if ! command -v jq >/dev/null 2>&1; then
+        return 0
+    fi
+
+    bg="$(jq -r '.surface_container // .background // "#17272f"' "$palette_file")"
+    bg1="$(jq -r '.surface_container_highest // .surface_container // .surface // "#3c444a"' "$palette_file")"
+    fg="$(jq -r '.on_surface // "#d5c9b2"' "$palette_file")"
+    blue="$(jq -r '.accent // "#7aa2f7"' "$palette_file")"
+    border="$(jq -r '.outline // "#5d666d"' "$palette_file")"
+    surface_variant="$(jq -r '.surface_variant // .surface_container_highest // "#1a1e21"' "$palette_file")"
+    item_bg="$(jq -r '.surface_container // "#252c31"' "$palette_file")"
+    launcher="$(jq -r '.accent // "#20c93d"' "$palette_file")"
+
+    tmp="$(mktemp)"
+    bg="$(jq -r '.surface_container // .background // "#17272f"' "$palette_file")"
+    bg1="$(jq -r '.surface_container_highest // .surface_container // .surface // "#3c444a"' "$palette_file")"
+    fg="$(jq -r '.on_surface // "#d5c9b2"' "$palette_file")"
+    blue="$(jq -r '.accent // "#7aa2f7"' "$palette_file")"
+    border="$(jq -r '.outline // "#5d666d"' "$palette_file")"
+    surface_variant="$(jq -r '.surface_variant // .surface_container_highest // "#1a1e21"' "$palette_file")"
+    item_bg="$(jq -r '.surface_container // "#252c31"' "$palette_file")"
+    launcher="$(jq -r '.accent // "#20c93d"' "$palette_file")"
+
+    cat > "$tmp" <<EOF
+@define-color bg $bg;
+@define-color bg1 $bg1;
+@define-color fg $fg;
+@define-color blue $blue;
+* {
+  border: none;
+  border-radius: 0;
+  font-family: "Terminus", "JetBrainsMono Nerd Font";
+  font-size: 13px;
+  font-weight: 800;
+}
+window#waybar {
+  background-color: @bg;
+  border-top: 3px solid $border;
+  color: @fg;
+}
+#cpu,
+#memory,
+#pulseaudio,
+#custom-brightness,
+#custom-network,
+#custom-launcher,
+#workspaces button,
+#custom-updates,
+#battery,
+#clock,
+#custom-power,
+#tray {
+  background: @bg;
+  color: @fg;
+  border-top: 2px solid $border;
+  border-left: 2px solid $border;
+  border-right: 2px solid $surface_variant;
+  border-bottom: 2px solid $surface_variant;
+  margin: 4px 2px;
+  padding: 0 10px;
+}
+#cpu,
+#memory {
+  color: @blue;
+  background: $item_bg;
+  border-top: 2px solid $surface_variant;
+  border-left: 2px solid $surface_variant;
+  border-right: 2px solid $border;
+  border-bottom: 2px solid $border;
+}
+#workspaces button.active {
+  color: @fg;
+  background: @bg1;
+  border-top: 2px solid $surface_variant;
+  border-left: 2px solid $surface_variant;
+  border-right: 2px solid $border;
+  border-bottom: 2px solid $border;
+}
+/* So that dynamic icons don't squash together */
+#workspaces button label {
+  font-size: 16px;
+  padding: 0 4px;
+}
+#workspaces button label {
+  font-size: 17px;
+  letter-spacing: 10px; /* keep it subtle */
+  padding: 0 6px;
+}
+#custom-launcher {
+  color: $launcher;
+}
+EOF
+
+    mv "$tmp" "$style_file"
+}
+
 generate_kde_scheme
+generate_quickshell_palette
+generate_waybar_style
 notify_kde_palette_change
 
 if pgrep -x mako >/dev/null 2>&1; then
     makoctl reload >/dev/null 2>&1 || pkill -HUP mako >/dev/null 2>&1 || true
 fi
 
-PALETTE_FILE="$HOME/.config/quickshell/palette.json"
 SETTINGS_FILE="$HOME/.config/quickshell/lib/usersettings.json"
+
+PALETTE_FILE="$HOME/.config/quickshell/palette.json"
 
 if command -v jq >/dev/null 2>&1 && [ -f "$PALETTE_FILE" ] && [ -f "$SETTINGS_FILE" ]; then
     tmp="$(mktemp)"
@@ -215,6 +355,16 @@ fi
 if pgrep -x kitty >/dev/null 2>&1; then
     pkill -SIGUSR1 kitty >/dev/null 2>&1 || true
 fi
+
+if pgrep -x waybar >/dev/null 2>&1; then
+    pkill -x waybar >/dev/null 2>&1 || true
+    sleep 0.15
+    WAYBAR_BIN="$(command -v waybar || true)"
+    if [ -n "$WAYBAR_BIN" ]; then
+        nohup "$WAYBAR_BIN" -c "$HOME/.config/waybar/config" -s "$HOME/.config/waybar/style.css" >/dev/null 2>&1 &
+    fi
+fi
+
 if [ "$NO_RELOAD" -eq 0 ]; then
     hyprctl reload >/dev/null 2>&1 || true
 
