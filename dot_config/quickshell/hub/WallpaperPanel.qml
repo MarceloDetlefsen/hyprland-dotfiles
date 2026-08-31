@@ -31,11 +31,73 @@ Item {
     property bool   showToast:        false
     property string toastText:        ""
     readonly property string wallpaperDir: Quickshell.env("HOME") + "/wallpapers"
+    readonly property string currentWallpaperStatePath: Quickshell.env("HOME") + "/.cache/quickshell/current_wallpaper"
+    readonly property string themePaletteStatePath: Quickshell.env("HOME") + "/.config/quickshell/palette.json"
 
     function triggerToast(msg) {
         root.toastText = msg
         root.showToast = true
         toastTimer.restart()
+    }
+
+    function fileBaseName(path) {
+        if (!path) return ""
+        var normalized = String(path)
+        var parts = normalized.split("/")
+        return parts.length > 0 ? parts[parts.length - 1] : normalized
+    }
+
+    function loadCurrentWallpaper() {
+        var raw = currentWallpaperFile.text ? String(currentWallpaperFile.text()).trim() : ""
+        if (raw === "") return
+        root.appliedFullPath = raw
+        root.appliedFileName = fileBaseName(raw)
+        scheduleScrollToCurrent()
+    }
+
+    function loadThemePalette() {
+        var raw = themePaletteFile.text ? String(themePaletteFile.text()).trim() : ""
+        if (raw === "") return
+        try {
+            var p = JSON.parse(raw)
+            root.palette = [
+                Qt.color(p.background || "#18120c"),
+                Qt.color(p.surface || p.background || "#18120c"),
+                Qt.color(p.primary || p.accent || "#18120c"),
+                Qt.color(p.secondary || p.accent || "#18120c"),
+                Qt.color(p.tertiary || p.accent || "#18120c"),
+                Qt.color(p.outline || p.on_surface || "#18120c")
+            ]
+        } catch (e) {
+            console.warn("[WallpaperPanel] palette load failed:", e)
+        }
+    }
+
+    function scheduleScrollToCurrent() {
+        scrollTimer.restart()
+    }
+
+    function scrollToCurrentWallpaper() {
+        if (root.appliedFullPath === "" || wallpaperModel.count === 0) return
+
+        var targetIndex = -1
+        for (var i = 0; i < wallpaperModel.count; i++) {
+            var entry = wallpaperModel.get(i)
+            if (entry && entry.full_path === root.appliedFullPath) {
+                targetIndex = i
+                break
+            }
+        }
+
+        if (targetIndex < 0) return
+
+        var row = Math.floor(targetIndex / gridWrapper.cols)
+        var rowTop = row * (gridWrapper.cellH + gridWrapper.gap)
+        var desiredY = rowTop - Math.max(0, (gridFlick.height - gridWrapper.cellH) / 2)
+        var maxY = Math.max(0, gridFlick.contentHeight - gridFlick.height)
+        var clampedY = Math.max(0, Math.min(desiredY, maxY))
+        gAnim.to = clampedY
+        gAnim.restart()
     }
 
     // binary relative to this QML file (hub/../bin/papel)
@@ -69,6 +131,7 @@ Item {
             "pkill -fx '" + root.papelBin + "' 2>/dev/null; sleep 0.1; " +
             "PAPEL_DIR='" + root.wallpaperDir + "' '" + root.papelBin + "' &"])
         connectTimer.restart()
+        scheduleScrollToCurrent()
     }
 
     function applyWallpaper(fullPath, thumbPath, fileName) {
@@ -78,12 +141,49 @@ Item {
         Quickshell.execDetached(["bash", root.wallpaperScript, fullPath])
         root.triggerToast("wallpaper applied")
         paletteCanvas.extractFrom(thumbPath)
+        paletteRefreshTimer.restart()
+        scheduleScrollToCurrent()
     }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        loadThemePalette()
+        loadCurrentWallpaper()
+        refresh()
+    }
 
     Timer { id: connectTimer; interval: 500; onTriggered: backend.connected = true }
     Timer { id: toastTimer;   interval: 1600; onTriggered: root.showToast = false }
+    Timer { id: paletteRefreshTimer; interval: 300; repeat: false; onTriggered: root.loadThemePalette() }
+    Timer { id: scrollTimer;  interval: 60; repeat: false; onTriggered: root.scrollToCurrentWallpaper() }
+
+    FileView {
+        id: currentWallpaperFile
+        path: root.currentWallpaperStatePath
+        preload: true
+        watchChanges: true
+        onLoaded: root.loadCurrentWallpaper()
+        onTextChanged: root.loadCurrentWallpaper()
+        onFileChanged: reload()
+        onLoadFailed: {}
+    }
+
+    FileView {
+        id: themePaletteFile
+        path: root.themePaletteStatePath
+        preload: true
+        watchChanges: true
+        onLoaded: root.loadThemePalette()
+        onTextChanged: root.loadThemePalette()
+        onFileChanged: reload()
+        onLoadFailed: {}
+    }
+
+    Connections {
+        target: wallpaperModel
+        function onCountChanged() {
+            root.scheduleScrollToCurrent()
+        }
+    }
 
     //  Layout 
     ColumnLayout {

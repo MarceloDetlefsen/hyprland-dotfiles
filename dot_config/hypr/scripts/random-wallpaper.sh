@@ -6,7 +6,7 @@ TARGET="${1:-}"
 if [ -n "$TARGET" ]; then
   [ -f "$TARGET" ] || exit 1
   RANDOM_WALL="$TARGET"
-  THEME_ARGS="--no-reload"
+  THEME_ARGS=""
 else
   RANDOM_WALL=$(find "$WALLDIR" -type f \
     \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) \

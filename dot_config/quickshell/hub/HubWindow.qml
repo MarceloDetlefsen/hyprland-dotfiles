@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Qt5Compat.GraphicalEffects
 import "../lib" as Lib
@@ -18,27 +19,68 @@ PanelWindow {
         }
 
         // Single entry point for outside callers, so the other panels get cleared
-        function showMonitors() {
-            win.wallpaperMode = false
-            win.settingsPanelOpen = false
-            win.monitorsMode = true
-        }
+    function showMonitors() {
+        win.wallpaperMode = false
+        win.settingsPanelOpen = false
+        win.monitorsMode = true
+        win.persistPanelState()
+    }
 
-        function showWallpapers() {
+    function showWallpapers() {
+        win.settingsPanelOpen = false
+        win.monitorsMode = false
+        win.wallpaperMode = true
+        win.persistPanelState()
+    }
+
+    function closeAll() {
+        win.settingsPanelOpen = false
+        win.wallpaperMode = false
+        win.monitorsMode = false
+        win.persistPanelState()
+        exitAnim.start()
+    }
+
+    readonly property string panelStatePath: Quickshell.env("HOME") + "/.cache/quickshell/hub_panel_state"
+
+    function persistPanelState() {
+        var mode = win.wallpaperMode ? "wallpaper"
+            : win.settingsPanelOpen ? "settings"
+            : win.monitorsMode ? "monitors"
+            : "none"
+        var screenName = win.screen && win.screen.name ? String(win.screen.name) : ""
+        panelStateFile.setText(mode + "\n" + screenName)
+    }
+
+    function restorePanelState() {
+        var raw = panelStateFile.text ? String(panelStateFile.text()).trim() : ""
+        if (raw === "") return
+        var lines = raw.split("\n")
+        var mode = (lines.length > 0 ? lines[0] : "").trim()
+        var storedScreen = (lines.length > 1 ? lines.slice(1).join("\n") : "").trim()
+        var currentScreen = win.screen && win.screen.name ? String(win.screen.name) : ""
+        if (storedScreen !== "" && currentScreen !== "" && storedScreen !== currentScreen) return
+
+        if (mode === "wallpaper") {
             win.settingsPanelOpen = false
             win.monitorsMode = false
             win.wallpaperMode = true
-        }
-
-        function closeAll() {
-            win.settingsPanelOpen = false
+            win.visible = true
+        } else if (mode === "settings") {
             win.wallpaperMode = false
             win.monitorsMode = false
-            exitAnim.start()
+            win.settingsPanelOpen = true
+            win.visible = true
+        } else if (mode === "monitors") {
+            win.wallpaperMode = false
+            win.settingsPanelOpen = false
+            win.monitorsMode = true
+            win.visible = true
         }
+    }
 
-        onVisibleChanged: {
-            setBordersHidden(visible)
+    onVisibleChanged: {
+        setBordersHidden(visible)
 
             if (visible) {
                 root.forceActiveFocus()
@@ -57,6 +99,7 @@ PanelWindow {
                 win.settingsPanelOpen = false
                 win.wallpaperMode = false
                 win.monitorsMode = false
+                win.persistPanelState()
                 }
         }
     
@@ -111,7 +154,18 @@ PanelWindow {
         : win.contentMode === "settings" ? 620
         : win.contentMode === "monitors" ? 560
         : 520
-// ---------------------------------------------------------------------------------------------------------------------------
+    FileView {
+        id: panelStateFile
+        path: win.panelStatePath
+        preload: true
+        watchChanges: true
+        onLoaded: win.restorePanelState()
+        onTextChanged: win.restorePanelState()
+        onFileChanged: reload()
+        onLoadFailed: {}
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------------
         Item {
             id: root
             anchors.fill: parent
@@ -127,6 +181,7 @@ PanelWindow {
                         win.settingsPanelOpen = !win.settingsPanelOpen
                         if (win.settingsPanelOpen) win.monitorsMode = false
                     }
+                    win.persistPanelState()
                     event.accepted = true
                 }
                 // Press 'W' to toggle wallpaper panel
@@ -136,6 +191,7 @@ PanelWindow {
                         win.settingsPanelOpen = false
                         win.monitorsMode = false
                     }
+                    win.persistPanelState()
                     event.accepted = true
                 }
                 // Press 'M' to toggle the displays panel
@@ -145,6 +201,7 @@ PanelWindow {
                         win.settingsPanelOpen = false
                         win.wallpaperMode = false
                     }
+                    win.persistPanelState()
                     event.accepted = true
                 }
                 // Press 'B' to toggle battery/system stats card

@@ -3,12 +3,22 @@
 set -euo pipefail
 
 WALLPAPER="${1:-}"
-NO_RELOAD=0
+NO_HYPR_RELOAD=0
+NO_QS_RESTART=0
 
 for arg in "$@"; do
-    if [ "$arg" = "--no-reload" ]; then
-        NO_RELOAD=1
-    fi
+    case "$arg" in
+        --no-reload)
+            NO_HYPR_RELOAD=1
+            NO_QS_RESTART=1
+            ;;
+        --no-hypr-reload)
+            NO_HYPR_RELOAD=1
+            ;;
+        --no-qs-restart)
+            NO_QS_RESTART=1
+            ;;
+    esac
 done
 
 if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
@@ -19,7 +29,10 @@ fi
 mkdir -p \
     "$HOME/.config/hypr/generated" \
     "$HOME/.config/kitty/generated" \
-    "$HOME/.local/share/color-schemes"
+    "$HOME/.local/share/color-schemes" \
+    "$HOME/.cache/quickshell"
+
+printf '%s\n' "$WALLPAPER" > "$HOME/.cache/quickshell/current_wallpaper"
 
 if ! command -v matugen >/dev/null 2>&1; then
     echo "apply-theme: matugen is not installed; wallpaper changed, theme not regenerated" >&2
@@ -242,15 +255,6 @@ generate_waybar_style() {
     launcher="$(jq -r '.accent // "#20c93d"' "$palette_file")"
 
     tmp="$(mktemp)"
-    bg="$(jq -r '.surface_container // .background // "#17272f"' "$palette_file")"
-    bg1="$(jq -r '.surface_container_highest // .surface_container // .surface // "#3c444a"' "$palette_file")"
-    fg="$(jq -r '.on_surface // "#d5c9b2"' "$palette_file")"
-    blue="$(jq -r '.accent // "#7aa2f7"' "$palette_file")"
-    border="$(jq -r '.outline // "#5d666d"' "$palette_file")"
-    surface_variant="$(jq -r '.surface_variant // .surface_container_highest // "#1a1e21"' "$palette_file")"
-    item_bg="$(jq -r '.surface_container // "#252c31"' "$palette_file")"
-    launcher="$(jq -r '.accent // "#20c93d"' "$palette_file")"
-
     cat > "$tmp" <<EOF
 @define-color bg $bg;
 @define-color bg1 $bg1;
@@ -365,9 +369,11 @@ if pgrep -x waybar >/dev/null 2>&1; then
     fi
 fi
 
-if [ "$NO_RELOAD" -eq 0 ]; then
+if [ "$NO_HYPR_RELOAD" -eq 0 ]; then
     hyprctl reload >/dev/null 2>&1 || true
+fi
 
+if [ "$NO_QS_RESTART" -eq 0 ]; then
     if pgrep -x qs >/dev/null 2>&1; then
         pkill -x qs >/dev/null 2>&1 || true
         sleep 0.3
