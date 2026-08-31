@@ -33,6 +33,10 @@ Tome de inspiración parte de la base creada con Quickshell de *snes19xx*, del r
 └── .chezmoiignore          # Archivos del repo que no deben aterrizar en $HOME
 ```
 
+## Documentación
+
+- [Bindings de Hyprland](HYPRLAND_BINDINGS.md)
+
 ## Restaurar en un PC nuevo
 
 ### Requisitos previos
