@@ -382,6 +382,7 @@ PanelWindow {
                             win.wallpaperMode = false
                         }
                     }
+                    onWallpaperRequested: win.showWallpapers()
                     onSettingsRequested: {
                         if (win.wallpaperMode) {
                             win.wallpaperMode = false

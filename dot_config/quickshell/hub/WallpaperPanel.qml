@@ -40,6 +40,7 @@ Item {
 
     // binary relative to this QML file (hub/../bin/papel)
     readonly property string papelBin: Qt.resolvedUrl("../bin/papel").toString().replace("file://", "")
+    readonly property string wallpaperScript: Quickshell.env("HOME") + "/.config/hypr/scripts/random-wallpaper.sh"
 
     implicitHeight: contentCol.implicitHeight
 
@@ -68,6 +69,15 @@ Item {
             "pkill -fx '" + root.papelBin + "' 2>/dev/null; sleep 0.1; " +
             "PAPEL_DIR='" + root.wallpaperDir + "' '" + root.papelBin + "' &"])
         connectTimer.restart()
+    }
+
+    function applyWallpaper(fullPath, thumbPath, fileName) {
+        root.appliedFullPath = fullPath
+        root.appliedThumbPath = thumbPath
+        root.appliedFileName = fileName
+        Quickshell.execDetached(["bash", root.wallpaperScript, fullPath])
+        root.triggerToast("wallpaper applied")
+        paletteCanvas.extractFrom(thumbPath)
     }
 
     Component.onCompleted: refresh()
@@ -179,15 +189,7 @@ Item {
                             fileName:   model.file_name
                             thumbIndex: model.index + 1
                             isSelected: model.full_path === root.appliedFullPath
-                            onApplyRequested: {
-                                root.appliedFullPath  = model.full_path
-                                root.appliedThumbPath = model.thumb_path
-                                root.appliedFileName  = model.file_name
-                                backend.write("apply:" + model.full_path + "\n")
-                                backend.flush()
-                                root.triggerToast("wallpaper applied")
-                                paletteCanvas.extractFrom(model.thumb_path)
-                            }
+                            onApplyRequested: root.applyWallpaper(model.full_path, model.thumb_path, model.file_name)
                         }
                     }
                 }

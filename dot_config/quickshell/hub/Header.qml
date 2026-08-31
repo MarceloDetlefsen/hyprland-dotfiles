@@ -22,6 +22,7 @@ Item {
   signal settingsRequested()
   signal batteryToggleRequested()
   signal monitorsRequested()
+  signal wallpaperRequested()
 
   // --- Theme Bindings ---
   readonly property bool _isDark: theme.isDarkMode
@@ -32,13 +33,6 @@ Item {
   readonly property color _accentRed: theme.accentRed
 
   implicitHeight: 52
-
-  Timer {
-    id: snapTimer
-    interval: 320
-    repeat: false
-    onTriggered: Quickshell.execDetached(["bash", "-lc", Lib.Configuration.screenshotScript])
-  }
 
   ColumnLayout {
       anchors.fill: parent
@@ -202,7 +196,7 @@ Item {
                         topPadding: 1 
                     }
                     HoverHandler { id: snapHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { id: snapTap; onTapped: { root.closeRequested(); snapTimer.restart() } }
+                    TapHandler { id: snapTap; onTapped: root.wallpaperRequested() }
                 }
 
             }

@@ -3,6 +3,13 @@
 set -euo pipefail
 
 WALLPAPER="${1:-}"
+NO_RELOAD=0
+
+for arg in "$@"; do
+    if [ "$arg" = "--no-reload" ]; then
+        NO_RELOAD=1
+    fi
+done
 
 if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
     echo "apply-theme: missing wallpaper path" >&2
@@ -208,13 +215,15 @@ fi
 if pgrep -x kitty >/dev/null 2>&1; then
     pkill -SIGUSR1 kitty >/dev/null 2>&1 || true
 fi
-hyprctl reload >/dev/null 2>&1 || true
+if [ "$NO_RELOAD" -eq 0 ]; then
+    hyprctl reload >/dev/null 2>&1 || true
 
-if pgrep -x qs >/dev/null 2>&1; then
-    pkill -x qs >/dev/null 2>&1 || true
-    sleep 0.3
-    QSBIN="$(command -v qs || command -v quickshell || true)"
-    if [ -n "$QSBIN" ]; then
-        nohup "$QSBIN" >/dev/null 2>&1 &
+    if pgrep -x qs >/dev/null 2>&1; then
+        pkill -x qs >/dev/null 2>&1 || true
+        sleep 0.3
+        QSBIN="$(command -v qs || command -v quickshell || true)"
+        if [ -n "$QSBIN" ]; then
+            nohup "$QSBIN" >/dev/null 2>&1 &
+        fi
     fi
 fi
