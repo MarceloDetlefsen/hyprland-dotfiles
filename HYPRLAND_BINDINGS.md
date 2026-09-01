@@ -28,6 +28,27 @@ Los bindings comentados en la config no se incluyen.
 | `Super + M` | Activa o desactiva el magnificador. |
 | `Super + T` | Activa o desactiva el cursor de presentacion. |
 | `Super + V` | Abre el historial de clipboard, elige un item y lo copia. |
+| `Super + Y` | Abre el selector de layout de ventana (`dwindle`, `master`, `scrolling`). |
+
+## Panel Hub
+
+El panel principal de Quickshell se abre y cierra con `Super + Space`. Dentro del panel, las teclas hacen esto:
+
+| Tecla | Accion |
+| --- | --- |
+| `d` | Cambia a tema oscuro, solo si no estas ya en oscuro. |
+| `l` | Cambia a tema claro, solo si no estas ya en claro. |
+| `n` | Expande o colapsa las notificaciones. |
+| `s` | Abre o cierra el panel de settings. |
+| `w` | Abre o cierra el selector de wallpapers. |
+| `m` | Abre o cierra el panel de displays. |
+| `b` | Abre o cierra la tarjeta de bateria / estado del sistema. |
+| `Esc` | Cierra todo el hub. |
+
+Notas:
+- `s` y `w` se reemplazan entre si dentro del mismo panel.
+- `m` cierra `s` y `w` cuando activa el panel de displays.
+- `b` no reemplaza al hub, solo muestra u oculta la tarjeta inferior.
 
 ## Aplicaciones y sesion
 

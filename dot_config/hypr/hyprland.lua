@@ -295,6 +295,7 @@ hl.bind(var_mod .. " + T", hl.dsp.exec_cmd("~/.config/hypr/scripts/presentation-
 
 -- ---------- CLIPHIST -----------
 hl.bind(var_mod .. " + V", hl.dsp.exec_cmd("sh -c \"cliphist list | wofi --dmenu | cliphist decode | wl-copy\""))
+hl.bind(var_mod .. " + Y", hl.dsp.exec_cmd("~/.config/hypr/scripts/window-layout.sh"))
 
 -- ---------- CAVA ----------
 hl.on("hyprland.start", function()
