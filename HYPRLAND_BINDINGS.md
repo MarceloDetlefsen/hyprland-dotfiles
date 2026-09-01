@@ -57,8 +57,8 @@ Notas:
 | `Super + Return` | Abre `kitty`. |
 | `Super + D` | Abre el launcher de aplicaciones `wofi`. |
 | `Super + N` | Abre `nwg-drawer`. |
+| `Super + Space` | Abre o cierra el hub de Quickshell. |
 | `Super + S` | Abre el panel de shaders de Quickshell. |
-| `Super + G` | Abre el selector de wallpapers de Quickshell. |
 | `Super + Q` | Cierra la ventana activa. |
 | `Super + F` | Alterna pantalla completa en la ventana activa. |
 | `Super + Shift + R` | Recarga Hyprland. |
