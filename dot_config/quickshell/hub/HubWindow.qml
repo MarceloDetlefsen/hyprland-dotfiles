@@ -173,6 +173,12 @@ PanelWindow {
 
             Keys.onEscapePressed: closeAll()
             Keys.onPressed: (event) => {
+                if (win.wallpaperMode && wallpaperLoader.item && wallpaperLoader.item.handleNavigationKey) {
+                    if (wallpaperLoader.item.handleNavigationKey(event.key)) {
+                        event.accepted = true
+                        return
+                    }
+                }
                 // Press 'S' to toggle settings panel
                 if (event.key === Qt.Key_S) {
                     if (win.wallpaperMode) {

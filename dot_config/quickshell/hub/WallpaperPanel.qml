@@ -27,6 +27,8 @@ Item {
     property string appliedFullPath:  ""
     property string appliedThumbPath: ""
     property string appliedFileName:  ""
+    property int    activeIndex:      -1
+    property int    pendingScrollIndex: -1
     property var    palette:          []
     property bool   showToast:        false
     property string toastText:        ""
@@ -47,11 +49,114 @@ Item {
         return parts.length > 0 ? parts[parts.length - 1] : normalized
     }
 
+    function wallpaperIndexForPath(fullPath) {
+        if (fullPath === "" || wallpaperModel.count === 0) return -1
+
+        for (var i = 0; i < wallpaperModel.count; i++) {
+            var entry = wallpaperModel.get(i)
+            if (entry && entry.full_path === fullPath) return i
+        }
+
+        return -1
+    }
+
+    function clampIndex(index) {
+        if (wallpaperModel.count === 0) return -1
+        return Math.max(0, Math.min(index, wallpaperModel.count - 1))
+    }
+
+    function scrollToIndex(targetIndex) {
+        if (targetIndex < 0 || wallpaperModel.count === 0) return
+
+        var row = Math.floor(targetIndex / gridWrapper.cols)
+        var rowTop = row * (gridWrapper.cellH + gridWrapper.gap)
+        var desiredY = rowTop - Math.max(0, (gridFlick.height - gridWrapper.cellH) / 2)
+        var maxY = Math.max(0, gridFlick.contentHeight - gridFlick.height)
+        var clampedY = Math.max(0, Math.min(desiredY, maxY))
+        gAnim.to = clampedY
+        gAnim.restart()
+    }
+
+    function scheduleScrollToIndex(targetIndex) {
+        root.pendingScrollIndex = targetIndex
+        scrollTimer.restart()
+    }
+
+    function syncActiveIndex() {
+        if (wallpaperModel.count === 0) {
+            root.activeIndex = -1
+            return
+        }
+
+        var appliedIndex = wallpaperIndexForPath(root.appliedFullPath)
+        if (appliedIndex >= 0) {
+            root.activeIndex = appliedIndex
+            return
+        }
+
+        if (root.activeIndex < 0 || root.activeIndex >= wallpaperModel.count) {
+            root.activeIndex = 0
+        }
+    }
+
+    function setActiveIndex(index, scrollIntoView) {
+        var clamped = clampIndex(index)
+        if (clamped < 0) return false
+
+        root.activeIndex = clamped
+        if (scrollIntoView !== false) scheduleScrollToIndex(clamped)
+        return true
+    }
+
+    function moveActiveBy(dx, dy) {
+        if (wallpaperModel.count === 0) return false
+
+        if (root.activeIndex < 0 || root.activeIndex >= wallpaperModel.count) {
+            syncActiveIndex()
+        }
+
+        var current = root.activeIndex < 0 ? 0 : root.activeIndex
+        var row = Math.floor(current / gridWrapper.cols)
+        var col = current % gridWrapper.cols
+        var next = current + dx + (dy * gridWrapper.cols)
+
+        if (dx !== 0) next = row * gridWrapper.cols + (col + dx)
+        if (dy !== 0) next = (row + dy) * gridWrapper.cols + col
+
+        if (next < 0) next = 0
+        if (next >= wallpaperModel.count) next = wallpaperModel.count - 1
+
+        return setActiveIndex(next, true)
+    }
+
+    function applyActiveWallpaper() {
+        if (root.activeIndex < 0 || root.activeIndex >= wallpaperModel.count) {
+            syncActiveIndex()
+        }
+
+        if (root.activeIndex < 0 || root.activeIndex >= wallpaperModel.count) return false
+
+        var entry = wallpaperModel.get(root.activeIndex)
+        if (!entry) return false
+        root.applyWallpaper(entry.full_path, entry.thumb_path, entry.file_name, root.activeIndex)
+        return true
+    }
+
+    function handleNavigationKey(key) {
+        if (key === Qt.Key_Left) return moveActiveBy(-1, 0)
+        if (key === Qt.Key_Right) return moveActiveBy(1, 0)
+        if (key === Qt.Key_Up) return moveActiveBy(0, -1)
+        if (key === Qt.Key_Down) return moveActiveBy(0, 1)
+        if (key === Qt.Key_Return || key === Qt.Key_Enter || key === Qt.Key_Space) return applyActiveWallpaper()
+        return false
+    }
+
     function loadCurrentWallpaper() {
         var raw = currentWallpaperFile.text ? String(currentWallpaperFile.text()).trim() : ""
         if (raw === "") return
         root.appliedFullPath = raw
         root.appliedFileName = fileBaseName(raw)
+        syncActiveIndex()
         scheduleScrollToCurrent()
     }
 
@@ -74,30 +179,13 @@ Item {
     }
 
     function scheduleScrollToCurrent() {
-        scrollTimer.restart()
+        var targetIndex = wallpaperIndexForPath(root.appliedFullPath)
+        if (targetIndex < 0) targetIndex = root.activeIndex
+        scheduleScrollToIndex(targetIndex)
     }
 
     function scrollToCurrentWallpaper() {
-        if (root.appliedFullPath === "" || wallpaperModel.count === 0) return
-
-        var targetIndex = -1
-        for (var i = 0; i < wallpaperModel.count; i++) {
-            var entry = wallpaperModel.get(i)
-            if (entry && entry.full_path === root.appliedFullPath) {
-                targetIndex = i
-                break
-            }
-        }
-
-        if (targetIndex < 0) return
-
-        var row = Math.floor(targetIndex / gridWrapper.cols)
-        var rowTop = row * (gridWrapper.cellH + gridWrapper.gap)
-        var desiredY = rowTop - Math.max(0, (gridFlick.height - gridWrapper.cellH) / 2)
-        var maxY = Math.max(0, gridFlick.contentHeight - gridFlick.height)
-        var clampedY = Math.max(0, Math.min(desiredY, maxY))
-        gAnim.to = clampedY
-        gAnim.restart()
+        scheduleScrollToCurrent()
     }
 
     // binary relative to this QML file (hub/../bin/papel)
@@ -134,10 +222,13 @@ Item {
         scheduleScrollToCurrent()
     }
 
-    function applyWallpaper(fullPath, thumbPath, fileName) {
+    function applyWallpaper(fullPath, thumbPath, fileName, index) {
         root.appliedFullPath = fullPath
         root.appliedThumbPath = thumbPath
         root.appliedFileName = fileName
+        var appliedIndex = wallpaperIndexForPath(fullPath)
+        if (appliedIndex >= 0) root.activeIndex = appliedIndex
+        else if (index !== undefined && index !== null) root.activeIndex = index
         Quickshell.execDetached(["bash", root.wallpaperScript, fullPath])
         root.triggerToast("wallpaper applied")
         paletteCanvas.extractFrom(thumbPath)
@@ -154,7 +245,16 @@ Item {
     Timer { id: connectTimer; interval: 500; onTriggered: backend.connected = true }
     Timer { id: toastTimer;   interval: 1600; onTriggered: root.showToast = false }
     Timer { id: paletteRefreshTimer; interval: 300; repeat: false; onTriggered: root.loadThemePalette() }
-    Timer { id: scrollTimer;  interval: 60; repeat: false; onTriggered: root.scrollToCurrentWallpaper() }
+    Timer {
+        id: scrollTimer
+        interval: 60
+        repeat: false
+        onTriggered: {
+            if (root.pendingScrollIndex < 0) return
+            root.scrollToIndex(root.pendingScrollIndex)
+            root.pendingScrollIndex = -1
+        }
+    }
 
     FileView {
         id: currentWallpaperFile
@@ -181,6 +281,7 @@ Item {
     Connections {
         target: wallpaperModel
         function onCountChanged() {
+            root.syncActiveIndex()
             root.scheduleScrollToCurrent()
         }
     }
@@ -289,7 +390,10 @@ Item {
                             fileName:   model.file_name
                             thumbIndex: model.index + 1
                             isSelected: model.full_path === root.appliedFullPath
-                            onApplyRequested: root.applyWallpaper(model.full_path, model.thumb_path, model.file_name)
+                            navIndex: index
+                            isNavActive: index === root.activeIndex
+                            onClicked: root.setActiveIndex(index, true)
+                            onApplyRequested: root.applyWallpaper(model.full_path, model.thumb_path, model.file_name, index)
                         }
                     }
                 }
@@ -472,10 +576,13 @@ Item {
         property string imagePath:  ""
         property string fileName:   ""
         property bool   isSelected: false
+        property bool   isNavActive: false
+        property int    navIndex:   -1
         property int    thumbIndex: 0
         property bool   isHovered:  false
         property bool   live:       true
         signal applyRequested()
+        signal clicked()
 
         // Drop shadow
         Rectangle {
@@ -584,7 +691,7 @@ Item {
             Rectangle {
                 anchors.fill: parent; radius: 7; color: "transparent"
                 border.width: 2; border.color: root.rAccent
-                opacity: wpt.isSelected ? 1.0 : wpt.isHovered ? 0.45 : 0.0
+                opacity: wpt.isSelected ? 1.0 : wpt.isNavActive ? 0.95 : wpt.isHovered ? 0.45 : 0.0
                 Behavior on opacity { NumberAnimation { duration: 160 } }
             }
 
@@ -608,7 +715,11 @@ Item {
                 anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                 onEntered: wpt.isHovered = true
                 onExited:  wpt.isHovered = false
-                onClicked: { pulseR.trigger(); wpt.applyRequested() }
+                onClicked: {
+                    pulseR.trigger()
+                    wpt.clicked()
+                    wpt.applyRequested()
+                }
             }
         }
     }
