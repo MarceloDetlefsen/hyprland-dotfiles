@@ -392,8 +392,8 @@ Item {
                             isSelected: model.full_path === root.appliedFullPath
                             navIndex: index
                             isNavActive: index === root.activeIndex
-                            onClicked: root.setActiveIndex(index, true)
                             onApplyRequested: root.applyWallpaper(model.full_path, model.thumb_path, model.file_name, index)
+                            onClicked: root.setActiveIndex(index, true)
                         }
                     }
                 }

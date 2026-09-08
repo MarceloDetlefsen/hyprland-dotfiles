@@ -1,8 +1,8 @@
 # Bindings de Hyprland
 
 Este documento resume los bindings activos definidos en:
-- [`dot_config/hypr/hyprland.lua`](/home/chelo/hyprland-dotfiles/dot_config/hypr/hyprland.lua)
-- [`dot_config/hypr/shader.lua`](/home/chelo/hyprland-dotfiles/dot_config/hypr/shader.lua)
+- [`dot_config/hypr/hyprland.lua`](~/hyprland-dotfiles/dot_config/hypr/hyprland.lua)
+- [`dot_config/hypr/shader.lua`](~/hyprland-dotfiles/dot_config/hypr/shader.lua)
 
 Los bindings comentados en la config no se incluyen.
 

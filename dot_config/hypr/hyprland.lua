@@ -339,7 +339,7 @@ hl.bind(var_mod .. " + 8", hl.dsp.focus({ workspace = 8 }))
 hl.bind(var_mod .. " + 9", hl.dsp.focus({ workspace = 9 }))
 
 -- Crear / ir al siguiente workspace disponible
-hl.bind("SUPER + equal", hl.dsp.focus({ workspace = "+1" }))
+hl.bind("SUPER + plus", hl.dsp.focus({ workspace = "+1" }))
 
 -- Borrar workspace actual (solo si está vacío)
 hl.bind("SUPER + minus", hl.dsp.focus({ workspace = "empty" }))

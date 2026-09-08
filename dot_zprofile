@@ -4,3 +4,7 @@ if ! pgrep -u "$USER" ssh-agent >/dev/null; then
 fi
 
 ssh-add ~/.ssh/GitHub >/dev/null 2>&1
+
+
+# Added by Antigravity CLI installer
+export PATH="~/.local/bin:$PATH"

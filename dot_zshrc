@@ -43,3 +43,7 @@ export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 alias server-bodega="ssh -i ~/.ssh/AWS root@34.174.62.78"
 
 alias server-bodega-nuevo="ssh -i ~/.ssh/AWS root@34.57.191.195"
+
+
+# Added by Antigravity CLI installer
+export PATH="~/.local/bin:$PATH"
