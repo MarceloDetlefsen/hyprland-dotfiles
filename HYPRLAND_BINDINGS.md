@@ -29,6 +29,7 @@ Los bindings comentados en la config no se incluyen.
 | `Super + T` | Activa o desactiva el cursor de presentacion. |
 | `Super + V` | Abre el historial de clipboard, elige un item y lo copia. |
 | `Super + Y` | Abre el selector de layout de ventana (`dwindle`, `master`, `scrolling`). |
+| `Super + F1` / `Super + /` | Despliega u oculta el menú interactivo de atajos con Wofi (toggle). |
 
 ## Panel Hub
 

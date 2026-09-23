@@ -326,6 +326,8 @@ hl.bind(var_mod .. " + C", hl.dsp.exec_cmd("hyprpicker -a"))
 hl.bind(var_mod .. " + SHIFT + A", hl.dsp.exec_cmd("~/.config/hypr/scripts/audio-output.sh"))
 hl.bind(var_mod .. " + SHIFT + ALT + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(var_mod .. " + O", hl.dsp.exec_cmd("~/.config/hypr/scripts/hdmi-mode.sh"))
+hl.bind(var_mod .. " + F1", hl.dsp.exec_cmd("~/.config/hypr/scripts/keybindings.sh"))
+hl.bind(var_mod .. " + slash", hl.dsp.exec_cmd("~/.config/hypr/scripts/keybindings.sh"))
 
 -- ---------- WORKSPACES ----------
 hl.bind(var_mod .. " + 1", hl.dsp.focus({ workspace = 1 }))
