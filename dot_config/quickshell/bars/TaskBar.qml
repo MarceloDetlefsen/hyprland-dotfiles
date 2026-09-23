@@ -383,51 +383,88 @@ PanelWindow {
 
     
     // ICONS
-    function getIcon(cls) {
+    function getIcon(cls, title) {
         var c = (cls || "").toLowerCase()
+        var t = (title || "").toLowerCase()
+
+        // Terminal editors / CLI tools inside terminals
+        if (c.includes("micro") || t.startsWith("micro ") || t.endsWith(" - micro") || t.includes("micro:")) return "󰷈"
+        if (c.includes("neovide") || c.includes("nvim") || c.includes("neovim") || t.startsWith("nvim") || t.includes("neovim")) return ""
+
+        // Web Browsers
         if (c.includes("firefox") || c.includes("zen") || c.includes("librewolf")) return "󰈹"
         if (c.includes("chromium") || c.includes("chrome") || c.includes("thorium")) return ""
-        if (c.includes("brave")) return ""
+        if (c.includes("brave")) return ""
+        if (c.includes("edge")) return ""
         if (c.includes("qutebrowser")) return "󰖟"
+
+        // Terminals
         if (c.includes("kitty")) return "󰄛"
         if (c.includes("alacritty") || c.includes("foot") || c.includes("terminal") || c.includes("ghostty") || c.includes("wezterm")) return ""
+
+        // Development & Text Editors
         if (c.includes("code") || c.includes("codium")) return ""
         if (c.includes("sublime")) return "󰅳"
-        if (c.includes("neovide") || c.includes("nvim")) return ""
         if (c.includes("idea") || c.includes("jetbrains")) return ""
         if (c.includes("pycharm")) return ""
         if (c.includes("webstorm")) return ""
         if (c.includes("clion")) return ""
         if (c.includes("android")) return "󰀴"
         if (c.includes("kate") || c.includes("texteditor")) return "󰈔"
+        if (c.includes("focuswriter")) return "󱞁"
+        if (c.includes("dbeaver")) return ""
+
+        // Note-taking, Passwords & Productivity
+        if (c.includes("obsidian")) return ""
+        if (c.includes("bitwarden")) return "󰯄"
+
+        // File Managers
         if (c.includes("nautilus") || c.includes("org.gnome.nautilus") || c.includes("files")) return ""
         if (c.includes("thunar") || c.includes("dolphin") || c.includes("nemo")) return ""
+
+        // Communication
         if (c.includes("discord") || c.includes("vesktop")) return "󰙯"
         if (c.includes("slack")) return "󰒱"
         if (c.includes("telegram")) return ""
         if (c.includes("signal")) return "󰭹"
         if (c.includes("element")) return "󰘨"
         if (c.includes("whatsapp")) return "󰖣"
+        if (c.includes("thunderbird")) return ""
+
+        // Media, Audio & Video
         if (c.includes("spotify")) return ""
         if (c.includes("vlc")) return "󰕼"
         if (c.includes("mpv") || c.includes("haruna") || c.includes("strawberry") || c.includes("rhythmbox") || c.includes("totem")) return ""
+        if (c.includes("amberol")) return "󱖏"
+        if (c.includes("lollypop")) return "󰎆"
+        if (c.includes("audacity")) return "󰎈"
+        if (c.includes("playing")) return "󰎄"
+        if (c.includes("com.obsproject") || c === "obs" || c.includes("obs-studio") || c.startsWith("obs ")) return ""
+        if (c.includes("kdenlive")) return "󰕧"
+
+        // Graphics & Design
         if (c.includes("gimp")) return ""
         if (c.includes("inkscape")) return "󰕙"
         if (c.includes("krita")) return ""
         if (c.includes("blender")) return "󰂫"
-        if (c.includes("audacity")) return "󰎈"
-        if (c.includes("obs")) return ""
-        if (c.includes("kdenlive")) return "󰕧"
+        if (c.includes("photos") || c.includes("org.gnome.loupe") || c.includes("imv") || c.includes("feh") || c.includes("eog") || c.includes("gthumb") || c.includes("qimgv") || c.includes("viewnior")) return ""
+        if (c.includes("swappy")) return "󰫕"
+
+        // Gaming
         if (c.includes("steam")) return ""
         if (c.includes("lutris")) return "󰺵"
         if (c.includes("heroic")) return "󰊖"
         if (c.includes("prismlauncher")) return "󰍳"
+
+        // Office & Documents
         if (c.includes("libreoffice-writer")) return "󰈬"
         if (c.includes("calc")) return "󰧷"
         if (c.includes("impress")) return "󰈧"
         if (c.includes("libreoffice")) return "󰈙"
-        if (c.includes("evince")) return "󰈦"
-        if (c.includes("thunderbird")) return ""
+        if (c.includes("onlyoffice")) return ""
+        if (c.includes("evince") || c.includes("zathura")) return "󰈦"
+
+        // System & Utilities
         if (c.includes("settings") || c.includes("missioncenter")) return ""
         if (c.includes("look")) return ""
         if (c.includes("systemmonitor")) return "󰄨"
@@ -435,17 +472,7 @@ PanelWindow {
         if (c.includes("calculator")) return "󰃬"
         if (c.includes("weather")) return ""
         if (c.includes("evercal")) return "󰃭"
-        if (c.includes("playing")) return "󰎄"
-        if (c.includes("photos") || c.includes("org.gnome.loupe") || c.includes("imv") || c.includes("feh") || c.includes("eog") || c.includes("gthumb") || c.includes("qimgv") || c.includes("viewnior")) return ""
-        if (c.includes ("swappy")) return "󰫕"
-        if (c.includes ("amberol")) return "󱖏"
-        if (c.includes ("xdm")) return ""
-        if (c.includes ("zathura")) return ""
-        if (c.includes ("focuswriter")) return "󱞁"
-        if (c.includes ("lollypop")) return "󰎆"
-        if (c.includes ("onlyoffice")) return ""
-        if (c.includes ("edge")) return ""
-        if (c.includes ("android")) return ""
+        if (c.includes("xdm")) return ""
 
         return ""
     }
@@ -1002,6 +1029,10 @@ PanelWindow {
                                                     if (!c) c = modelData?.title ?? ""
                                                     return String(c)
                                                 }
+                                                property string safeTitle: {
+                                                    const o = modelData?.lastIpcObject
+                                                    return String(o?.title ?? modelData?.title ?? "")
+                                                }
 
                                                 QtObject {
                                                     id: flashColor
@@ -1016,7 +1047,7 @@ PanelWindow {
                                                 
                                                 Text {
                                                     anchors.centerIn: parent
-                                                    text: taskbar.getIcon(parent.safeClass)
+                                                    text: taskbar.getIcon(parent.safeClass, parent.safeTitle)
                                                     font.family: theme.iconFont
                                                     font.pixelSize: 18
                                                     lineHeight: 0.8
