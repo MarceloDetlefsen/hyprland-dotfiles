@@ -4,6 +4,8 @@ Mis configuraciones personales de Hyprland y el ecosistema Wayland. Guardadas ac
 
 Tome de inspiración parte de la base creada con Quickshell de *snes19xx*, del repo `https://github.com/snes19xx/surface-dots`.
 
+![Preview del rice](Preview.png)
+
 ## Contenido
 
 ```text

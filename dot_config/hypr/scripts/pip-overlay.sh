@@ -15,21 +15,51 @@ case "$ACTION" in
         ;;
     send)
         # Envía la ventana activa a special:overlay configurándola como PiP,
-        # o la devuelve al escritorio normal actual si ya está en el overlay.
+        # o la devuelve al escritorio normal restaurando su tamaño y estado original.
         hyprctl eval '
+            PIP_WINDOW_STATES = PIP_WINDOW_STATES or {}
+
             local win = hl.get_active_window()
             if not win then return end
 
+            local win_addr = tostring(win.address)
             local active_ws = hl.get_active_workspace()
             local active_special = hl.get_active_special_workspace()
             local ws_name = (win.workspace and win.workspace.name) or ""
             local is_in_overlay = (ws_name == "special:overlay") or (active_special and active_special.name == "special:overlay" and ws_name:find("special"))
 
             if is_in_overlay then
+                -- DEVOLVER AL ESCRITORIO NORMAL Y RESTAURAR TAMAÑO
                 local target_id = (active_ws and active_ws.id) or 1
+                local prev = PIP_WINDOW_STATES[win_addr]
+
+                if prev then
+                    if not prev.was_floating then
+                        -- Era ventana en mosaico (tiling): volver a mosaico
+                        hl.dispatch(hl.dsp.window.float({ action = "off" }))
+                    else
+                        -- Era flotante: restaurar dimensiones y posición previas
+                        hl.dispatch(hl.dsp.window.resize({ x = prev.size_x, y = prev.size_y, relative = false }))
+                        hl.dispatch(hl.dsp.window.move({ x = prev.at_x, y = prev.at_y, relative = false }))
+                    end
+                    PIP_WINDOW_STATES[win_addr] = nil
+                else
+                    -- Fallback: desflotar para que tome el tamaño completo del workspace
+                    hl.dispatch(hl.dsp.window.float({ action = "off" }))
+                end
+
                 hl.dispatch(hl.dsp.window.move({ workspace = target_id }))
-                hl.exec_cmd("notify-send -t 2000 -a Hyprland -i video-display \"PiP Overlay\" \"Ventana devuelta al Workspace " .. tostring(target_id) .. "\"")
+                hl.exec_cmd("notify-send -t 2000 -a Hyprland -i video-display \"PiP Overlay\" \"Ventana restaurada al Workspace " .. tostring(target_id) .. "\"")
             else
+                -- GUARDAR ESTADO ORIGINAL Y CONFIGURAR PiP EN OVERLAY
+                PIP_WINDOW_STATES[win_addr] = {
+                    was_floating = win.floating,
+                    size_x = win.size and win.size.x or 960,
+                    size_y = win.size and win.size.y or 540,
+                    at_x = win.at and win.at.x or 100,
+                    at_y = win.at and win.at.y or 100,
+                }
+
                 if not win.floating then
                     hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
                 end
@@ -50,7 +80,7 @@ case "$ACTION" in
                     hl.dispatch(hl.dsp.workspace.toggle_special("overlay"))
                 end
 
-                hl.exec_cmd("notify-send -t 2500 -a Hyprland -i video-display \"PiP Overlay Activo\" \"⚽ Ventana en modo sobreposición\\n• Super + 0: Ocultar / Mostrar\\n• Super + Shift + 0: Devolver a este escritorio\"")
+                hl.exec_cmd("notify-send -t 2500 -a Hyprland -i video-display \"PiP Overlay Activo\" \"⚽ Ventana en modo sobreposición\\n• Super + 0: Ocultar / Mostrar\\n• Super + Shift + 0: Devolver y restaurar tamaño\"")
             end
         ' >/dev/null 2>&1
         ;;

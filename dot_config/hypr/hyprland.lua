@@ -372,15 +372,40 @@ hl.bind("SUPER + plus", hl.dsp.focus({ workspace = "+1" }))
 
 -- Borrar workspace actual (solo si está vacío)
 hl.bind("SUPER + minus", hl.dsp.focus({ workspace = "empty" }))
-hl.bind(var_mod .. " + SHIFT + 1", hl.dsp.window.move({ workspace = 1 }))
-hl.bind(var_mod .. " + SHIFT + 2", hl.dsp.window.move({ workspace = 2 }))
-hl.bind(var_mod .. " + SHIFT + 3", hl.dsp.window.move({ workspace = 3 }))
-hl.bind(var_mod .. " + SHIFT + 4", hl.dsp.window.move({ workspace = 4 }))
-hl.bind(var_mod .. " + SHIFT + 5", hl.dsp.window.move({ workspace = 5 }))
-hl.bind(var_mod .. " + SHIFT + 6", hl.dsp.window.move({ workspace = 6 }))
-hl.bind(var_mod .. " + SHIFT + 7", hl.dsp.window.move({ workspace = 7 }))
-hl.bind(var_mod .. " + SHIFT + 8", hl.dsp.window.move({ workspace = 8 }))
-hl.bind(var_mod .. " + SHIFT + 9", hl.dsp.window.move({ workspace = 9 }))
+-- Función para mover ventanas restaurando su tamaño y estado si vienen del overlay
+local function move_window_to_workspace(target_id)
+    local win = hl.get_active_window()
+    if not win then return end
+
+    local win_addr = tostring(win.address)
+    local ws_name = (win.workspace and win.workspace.name) or ""
+    local active_special = hl.get_active_special_workspace()
+    local is_in_overlay = (ws_name == "special:overlay") or (active_special and active_special.name == "special:overlay" and ws_name:find("special"))
+
+    if is_in_overlay then
+        PIP_WINDOW_STATES = PIP_WINDOW_STATES or {}
+        local prev = PIP_WINDOW_STATES[win_addr]
+        if prev then
+            if not prev.was_floating then
+                hl.dispatch(hl.dsp.window.float({ action = "off" }))
+            else
+                hl.dispatch(hl.dsp.window.resize({ x = prev.size_x, y = prev.size_y, relative = false }))
+                hl.dispatch(hl.dsp.window.move({ x = prev.at_x, y = prev.at_y, relative = false }))
+            end
+            PIP_WINDOW_STATES[win_addr] = nil
+        else
+            hl.dispatch(hl.dsp.window.float({ action = "off" }))
+        end
+    end
+
+    hl.dispatch(hl.dsp.window.move({ workspace = target_id }))
+end
+
+for i = 1, 9 do
+    hl.bind(var_mod .. " + SHIFT + " .. i, function()
+        move_window_to_workspace(i)
+    end)
+end
 
 -- Enviar / devolver ventana a escritorio sobrepuesto (PiP)
 hl.bind(var_mod .. " + SHIFT + 0", hl.dsp.exec_cmd("~/.config/hypr/scripts/pip-overlay.sh send"))
