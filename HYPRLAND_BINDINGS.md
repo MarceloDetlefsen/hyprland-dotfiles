@@ -79,9 +79,11 @@ Notas:
 | Atajo | Accion |
 | --- | --- |
 | `Super + 1` a `Super + 9` | Cambia al workspace 1 al 9. |
+| `Super + 0` | Alterna el escritorio sobrepuesto (Overlay / PiP para partidos y videos). |
 | `Super + =` | Cambia al siguiente workspace disponible. |
 | `Super + -` | Cambia a un workspace vacio disponible. |
 | `Super + Shift + 1` a `Super + Shift + 9` | Mueve la ventana activa al workspace 1 al 9. |
+| `Super + Shift + 0` | Envia la ventana activa como PiP flotante al escritorio sobrepuesto o la devuelve al escritorio actual. |
 
 ## Foco, movimiento y resize
 

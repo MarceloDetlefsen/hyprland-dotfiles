@@ -121,6 +121,7 @@ hl.config({
         numlock_by_default = true,
         follow_mouse = 1,
         mouse_refocus = false,
+        special_fallthrough = true,
         touchpad = {
             natural_scroll = true,
             tap_to_click = true,
@@ -176,6 +177,20 @@ hl.window_rule({
     fullscreen = true,
 })
 
+-- ---------- ESCRITORIO SOBREPUESTO (OVERLAY / PIP) ----------
+hl.workspace_rule({
+    workspace = "special:overlay",
+})
+
+hl.window_rule({
+    name = "overlay-windows",
+    match = {
+        workspace = "special:overlay",
+    },
+    float = true,
+    opacity = "1.0 1.0",
+})
+
 -- ------- QUITAR FONDO OG ------
 hl.config({
     misc = {
@@ -204,6 +219,7 @@ hl.config({
         dim_inactive = false,
         dim_strength = 0.19,
         dim_around = 0.6,
+        dim_special = 0.0,
         shadow = {
             enabled = true,
             range = 3,
@@ -215,6 +231,7 @@ hl.config({
             size = 5,
             passes = 2,
             new_optimizations = true,
+            special = false,
         },
     },
 })
@@ -259,6 +276,13 @@ hl.animation({
     speed = 3,
     bezier = "smooth",
     style = "slidefade 15%",
+})
+hl.animation({
+    leaf = "specialWorkspace",
+    enabled = true,
+    speed = 3,
+    bezier = "smooth",
+    style = "slide",
 })
 
 -- ---------- VOLUME CONTROLS ----------
@@ -340,6 +364,9 @@ hl.bind(var_mod .. " + 7", hl.dsp.focus({ workspace = 7 }))
 hl.bind(var_mod .. " + 8", hl.dsp.focus({ workspace = 8 }))
 hl.bind(var_mod .. " + 9", hl.dsp.focus({ workspace = 9 }))
 
+-- Alternar escritorio sobrepuesto (Overlay / PiP)
+hl.bind(var_mod .. " + 0", hl.dsp.workspace.toggle_special("overlay"))
+
 -- Crear / ir al siguiente workspace disponible
 hl.bind("SUPER + plus", hl.dsp.focus({ workspace = "+1" }))
 
@@ -354,6 +381,9 @@ hl.bind(var_mod .. " + SHIFT + 6", hl.dsp.window.move({ workspace = 6 }))
 hl.bind(var_mod .. " + SHIFT + 7", hl.dsp.window.move({ workspace = 7 }))
 hl.bind(var_mod .. " + SHIFT + 8", hl.dsp.window.move({ workspace = 8 }))
 hl.bind(var_mod .. " + SHIFT + 9", hl.dsp.window.move({ workspace = 9 }))
+
+-- Enviar / devolver ventana a escritorio sobrepuesto (PiP)
+hl.bind(var_mod .. " + SHIFT + 0", hl.dsp.exec_cmd("~/.config/hypr/scripts/pip-overlay.sh send"))
 
 -- ---------- MOVER FOCO (VIM STYLE) ----------
 hl.bind(var_mod .. " + H", hl.dsp.focus({ direction = "left" }))
